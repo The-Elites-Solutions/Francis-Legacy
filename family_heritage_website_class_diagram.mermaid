@@ -1,0 +1,335 @@
+classDiagram
+    class RootLayout {
+        <<NextJSLayout>>
+        +children: React.ReactNode
+        +metadata: Metadata
+    }
+
+    class FamilyTreeStore {
+        +familyData: FamilyMember[]
+        +selectedMember: FamilyMember | null
+        +searchQuery: string
+        +setFamilyData(data: FamilyMember[]) void
+        +setSelectedMember(member: FamilyMember) void
+        +searchMembers(query: string) FamilyMember[]
+        +getAncestors(memberId: string) FamilyMember[]
+        +getDescendants(memberId: string) FamilyMember[]
+    }
+
+    class ContentStore {
+        +blogPosts: BlogPost[]
+        +newsArticles: NewsArticle[]
+        +familyStories: FamilyStory[]
+        +archives: ArchiveDocument[]
+        +loadContent() Promise<void>
+        +addBlogPost(post: BlogPost) void
+        +updatePost(id: string, post: BlogPost) void
+        +deletePost(id: string) void
+        +searchContent(query: string) SearchResult[]
+    }
+
+    class UIStore {
+        +theme: ThemeConfig
+        +isMobile: boolean
+        +currentPage: string
+        +sidebarOpen: boolean
+        +setTheme(theme: ThemeConfig) void
+        +toggleSidebar() void
+        +setCurrentPage(page: string) void
+    }
+
+    class FamilyMember {
+        +id: string
+        +firstName: string
+        +lastName: string
+        +birthDate: Date | null
+        +deathDate: Date | null
+        +biography: string
+        +photos: string[]
+        +parentIds: string[]
+        +spouseIds: string[]
+        +childIds: string[]
+        +getFullName() string
+        +isAlive() boolean
+        +getAge() number
+        +getRelationship(other: FamilyMember) string
+    }
+
+    class BlogPost {
+        +id: string
+        +title: string
+        +content: string
+        +authorId: string
+        +publishDate: Date
+        +lastModified: Date
+        +tags: string[]
+        +featured: boolean
+        +comments: Comment[]
+        +getExcerpt(length: number) string
+        +getReadingTime() number
+        +addComment(comment: Comment) void
+    }
+
+    class NewsArticle {
+        +id: string
+        +title: string
+        +content: string
+        +publishDate: Date
+        +category: NewsCategory
+        +images: string[]
+        +authorId: string
+        +featured: boolean
+        +comments: Comment[]
+        +getFormattedDate() string
+        +getCategoryLabel() string
+    }
+
+    class FamilyStory {
+        +id: string
+        +title: string
+        +content: string
+        +storytellerId: string
+        +relatedMemberIds: string[]
+        +timeperiod: string
+        +photos: string[]
+        +tags: string[]
+        +publishDate: Date
+        +getRelatedMembers() FamilyMember[]
+        +getTimeline() TimelineEvent[]
+    }
+
+    class ArchiveDocument {
+        +id: string
+        +title: string
+        +filename: string
+        +fileType: string
+        +uploadDate: Date
+        +description: string
+        +tags: string[]
+        +relatedMemberIds: string[]
+        +category: DocumentCategory
+        +fileSize: number
+        +getThumbnail() string
+        +getDownloadUrl() string
+        +getFileInfo() FileInfo
+    }
+
+    class Comment {
+        +id: string
+        +authorName: string
+        +content: string
+        +timestamp: Date
+        +parentCommentId: string | null
+        +approved: boolean
+        +getFormattedTime() string
+        +isReply() boolean
+    }
+
+    class Layout {
+        <<NextJSPage>>
+        +children: ReactNode
+        +render() JSX.Element
+    }
+
+    class Navigation {
+        <<NextJSPage>>
+        +currentPath: string
+        +isMobile: boolean
+        +render() JSX.Element
+        +handleNavigation(path: string) void
+    }
+
+    class HomePage {
+        <<NextJSPage>>
+        +recentPosts: BlogPost[]
+        +familyStats: FamilyStats
+        +featuredStory: FamilyStory
+        +render() JSX.Element
+        +loadHomeData() Promise<void>
+    }
+
+    class FamilyHistoryPage {
+        <<NextJSPage>>
+        +stories: FamilyStory[]
+        +timeline: TimelineEvent[]
+        +searchQuery: string
+        +render() JSX.Element
+        +handleSearch(query: string) void
+        +loadHistoryData() Promise<void>
+    }
+
+    class FamilyTreePage {
+        <<NextJSPage>>
+        +treeData: FamilyTreeNode[]
+        +selectedMember: FamilyMember | null
+        +viewMode: TreeViewMode
+        +render() JSX.Element
+        +handleNodeClick(memberId: string) void
+        +handleZoom(level: number) void
+        +switchViewMode(mode: TreeViewMode) void
+    }
+
+    class NewsPage {
+        <<NextJSPage>>
+        +articles: NewsArticle[]
+        +categories: NewsCategory[]
+        +selectedCategory: NewsCategory | null
+        +render() JSX.Element
+        +filterByCategory(category: NewsCategory) void
+        +loadNewsData() Promise<void>
+    }
+
+    class BlogPage {
+        <<NextJSPage>>
+        +posts: BlogPost[]
+        +featuredPost: BlogPost | null
+        +tags: string[]
+        +render() JSX.Element
+        +filterByTag(tag: string) void
+        +loadBlogData() Promise<void>
+    }
+
+    class ArchivePage {
+        <<NextJSPage>>
+        +documents: ArchiveDocument[]
+        +categories: DocumentCategory[]
+        +searchQuery: string
+        +render() JSX.Element
+        +handleFileUpload(files: File[]) void
+        +handleSearch(query: string) void
+        +loadArchiveData() Promise<void>
+    }
+
+    class FamilyTreeVisualization {
+        <<NextJSPage>>
+        +nodes: FamilyTreeNode[]
+        +edges: FamilyTreeEdge[]
+        +onNodeClick: (nodeId: string) => void
+        +render() JSX.Element
+        +calculateLayout() void
+        +handleNodeDrag(nodeId: string, position: Position) void
+    }
+
+    class SearchComponent {
+        <<NextJSPage>>
+        +query: string
+        +results: SearchResult[]
+        +onSearch: (query: string) => void
+        +render() JSX.Element
+        +handleInputChange(value: string) void
+        +clearResults() void
+    }
+
+    class ImageGallery {
+        <<NextJSPage>>
+        +images: string[]
+        +currentIndex: number
+        +lightboxOpen: boolean
+        +render() JSX.Element
+        +openLightbox(index: number) void
+        +navigateImage(direction: 'prev' | 'next') void
+    }
+
+    class ContentEditor {
+        <<NextJSPage>>
+        +content: string
+        +onSave: (content: string) => void
+        +editorMode: 'wysiwyg' | 'markdown'
+        +render() JSX.Element
+        +handleContentChange(content: string) void
+        +toggleEditorMode() void
+    }
+
+    class FileUploader {
+        <<NextJSPage>>
+        +acceptedTypes: string[]
+        +maxSize: number
+        +onUpload: (files: File[]) => void
+        +render() JSX.Element
+        +handleDrop(files: File[]) void
+        +validateFiles(files: File[]) ValidationResult
+    }
+
+    class ThemeProvider {
+        <<ReactContext>>
+        +theme: ThemeConfig
+        +toggleTheme() void
+        +setCustomColors(colors: ColorConfig) void
+    }
+
+    class DataService {
+        <<ServiceClass>>
+        +loadFamilyData() Promise<FamilyMember[]>
+        +saveFamilyData(data: FamilyMember[]) Promise<void>
+        +loadBlogPosts() Promise<BlogPost[]>
+        +saveBlogPost(post: BlogPost) Promise<void>
+        +loadNewsArticles() Promise<NewsArticle[]>
+        +loadArchives() Promise<ArchiveDocument[]>
+        +uploadFile(file: File) Promise<string>
+        +searchContent(query: string) Promise<SearchResult[]>
+    }
+
+    class LocalStorageService {
+        <<ServiceClass>>
+        +get(key: string) any
+        +set(key: string, value: any) void
+        +remove(key: string) void
+        +clear() void
+        +exists(key: string) boolean
+    }
+
+    class SearchService {
+        <<ServiceClass>>
+        +indexContent(content: any[]) void
+        +search(query: string) SearchResult[]
+        +addToIndex(item: any) void
+        +removeFromIndex(id: string) void
+        +updateIndex(id: string, item: any) void
+    }
+
+    class ValidationService {
+        <<ServiceClass>>
+        +validateFamilyMember(member: FamilyMember) ValidationResult
+        +validateBlogPost(post: BlogPost) ValidationResult
+        +validateFile(file: File) ValidationResult
+        +validateEmail(email: string) boolean
+        +sanitizeContent(content: string) string
+    }
+
+    %% Relationships
+    RootLayout --> Layout
+    Layout --> Navigation
+    
+    RootLayout --> FamilyTreeStore
+    RootLayout --> ContentStore
+    RootLayout --> UIStore
+    
+    FamilyTreeStore --> FamilyMember
+    ContentStore --> BlogPost
+    ContentStore --> NewsArticle
+    ContentStore --> FamilyStory
+    ContentStore --> ArchiveDocument
+    
+    BlogPost --> Comment
+    NewsArticle --> Comment
+    
+    HomePage --> ContentStore
+    FamilyHistoryPage --> FamilyTreeStore
+    FamilyTreePage --> FamilyTreeStore
+    NewsPage --> ContentStore
+    BlogPage --> ContentStore
+    ArchivePage --> ContentStore
+    
+    FamilyTreePage --> FamilyTreeVisualization
+    Layout --> SearchComponent
+    
+    RootLayout --> DataService
+    DataService --> LocalStorageService
+    DataService --> SearchService
+    DataService --> ValidationService
+    
+    FamilyHistoryPage --> ImageGallery
+    BlogPage --> ContentEditor
+    ArchivePage --> FileUploader
+    
+    RootLayout --> ThemeProvider

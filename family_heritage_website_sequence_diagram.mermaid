@@ -1,0 +1,200 @@
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant L as Layout
+    participant N as Navigation
+    participant DS as DataService
+    participant FTS as FamilyTreeStore
+    participant CS as ContentStore
+    participant LS as LocalStorageService
+    participant HP as HomePage
+    participant FTP as FamilyTreePage
+    participant BP as BlogPage
+
+    Note over U,BP: Application Initialization
+    U->>A: Load Application
+    A->>A: initializeApp()
+    A->>DS: loadFamilyData()
+    DS->>LS: get("familyData")
+    LS-->>DS: return family data
+    DS-->>A: return FamilyMember[]
+    A->>FTS: setFamilyData(data)
+    
+    A->>DS: loadBlogPosts()
+    DS->>LS: get("blogPosts")
+    LS-->>DS: return blog data
+    DS-->>A: return BlogPost[]
+    A->>CS: setBlogPosts(posts)
+    
+    A->>DS: loadNewsArticles()
+    DS->>LS: get("newsArticles")
+    LS-->>DS: return news data
+    DS-->>A: return NewsArticle[]
+    A->>CS: setNewsArticles(articles)
+    
+    A->>L: render(children)
+    L->>N: render()
+    N-->>L: Navigation component
+    L-->>A: Layout with navigation
+    
+    Note over U,BP: Home Page Loading
+    A->>HP: render()
+    HP->>HP: loadHomeData()
+    HP->>CS: getRecentPosts()
+    CS-->>HP: return recent BlogPost[]
+    HP->>FTS: getFamilyStats()
+    FTS-->>HP: return family statistics
+    HP->>CS: getFeaturedStory()
+    CS-->>HP: return featured FamilyStory
+    HP-->>A: rendered HomePage
+    A-->>U: Display home page
+
+    Note over U,BP: Navigation to Family Tree
+    U->>N: Click "Tree" menu
+    N->>N: handleNavigation("/tree")
+    N->>A: Navigate to /tree
+    A->>FTP: render()
+    FTP->>FTP: loadTreeData()
+    FTP->>FTS: getFamilyData()
+    FTS-->>FTP: return FamilyMember[]
+    FTP->>FTP: buildTreeNodes()
+    FTP-->>A: rendered FamilyTreePage
+    A-->>U: Display family tree
+
+    Note over U,BP: Family Tree Interaction
+    U->>FTP: Click family member node
+    FTP->>FTP: handleNodeClick(memberId)
+    FTP->>FTS: setSelectedMember(memberId)
+    FTS->>FTS: findMember(memberId)
+    FTS-->>FTP: return selected FamilyMember
+    FTP->>FTP: showMemberDetails()
+    FTP-->>U: Display member profile
+
+    Note over U,BP: Search Functionality
+    U->>N: Enter search query
+    N->>N: handleInputChange(query)
+    N->>DS: searchContent(query)
+    DS->>FTS: searchMembers(query)
+    FTS-->>DS: return matching FamilyMember[]
+    DS->>CS: searchPosts(query)
+    CS-->>DS: return matching BlogPost[]
+    DS->>CS: searchArchives(query)
+    CS-->>DS: return matching ArchiveDocument[]
+    DS-->>N: return SearchResult[]
+    N-->>U: Display search results
+
+    Note over U,BP: Blog Page Operations
+    U->>N: Click "Blog" menu
+    N->>A: Navigate to /blog
+    A->>BP: render()
+    BP->>BP: loadBlogData()
+    BP->>CS: getBlogPosts()
+    CS-->>BP: return BlogPost[]
+    BP->>CS: getFeaturedPost()
+    CS-->>BP: return featured BlogPost
+    BP-->>A: rendered BlogPage
+    A-->>U: Display blog page
+
+    Note over U,BP: Create New Blog Post
+    U->>BP: Click "New Post" button
+    BP->>BP: openEditor()
+    U->>BP: Enter post content
+    BP->>BP: handleContentChange(content)
+    U->>BP: Click "Save" button
+    BP->>BP: validatePost(postData)
+    BP->>DS: saveBlogPost(newPost)
+    DS->>LS: set("blogPosts", updatedPosts)
+    LS-->>DS: success
+    DS-->>BP: success
+    BP->>CS: addBlogPost(newPost)
+    CS-->>BP: updated posts
+    BP-->>U: Show success message
+
+    Note over U,BP: Family Member Profile Update
+    U->>FTP: Click "Edit Profile" button
+    FTP->>FTP: openMemberEditor()
+    U->>FTP: Update member information
+    FTP->>FTP: handleMemberUpdate(memberData)
+    FTP->>DS: updateFamilyMember(memberId, data)
+    DS->>LS: get("familyData")
+    LS-->>DS: current family data
+    DS->>DS: updateMemberInData(memberId, data)
+    DS->>LS: set("familyData", updatedData)
+    LS-->>DS: success
+    DS-->>FTP: success
+    FTP->>FTS: updateMember(memberId, data)
+    FTS-->>FTP: updated member
+    FTP-->>U: Show updated profile
+
+    Note over U,BP: File Upload to Archives
+    U->>A: Navigate to /archives
+    A->>ArchivePage: render()
+    U->>ArchivePage: Select files to upload
+    ArchivePage->>ArchivePage: handleFileUpload(files)
+    ArchivePage->>DS: validateFiles(files)
+    DS-->>ArchivePage: validation results
+    ArchivePage->>DS: uploadFiles(validFiles)
+    DS->>LS: get("archives")
+    LS-->>DS: current archives
+    loop For each file
+        DS->>DS: createArchiveDocument(file)
+        DS->>LS: saveFile(file)
+        LS-->>DS: file saved
+    end
+    DS->>LS: set("archives", updatedArchives)
+    LS-->>DS: success
+    DS-->>ArchivePage: upload results
+    ArchivePage->>CS: updateArchives(newDocuments)
+    CS-->>ArchivePage: updated archives
+    ArchivePage-->>U: Show upload success
+
+    Note over U,BP: Comment System
+    U->>BP: Click on blog post
+    BP->>BP: showPostDetails(postId)
+    U->>BP: Enter comment text
+    BP->>BP: handleCommentSubmit(comment)
+    BP->>DS: addComment(postId, comment)
+    DS->>LS: get("blogPosts")
+    LS-->>DS: current posts
+    DS->>DS: addCommentToPost(postId, comment)
+    DS->>LS: set("blogPosts", updatedPosts)
+    LS-->>DS: success
+    DS-->>BP: success
+    BP->>CS: updatePost(postId, updatedPost)
+    CS-->>BP: updated post
+    BP-->>U: Show new comment
+
+    Note over U,BP: Theme Customization
+    U->>L: Access theme settings
+    L->>L: toggleTheme()
+    L->>LS: set("theme", newTheme)
+    LS-->>L: theme saved
+    L->>L: applyTheme(newTheme)
+    L-->>U: Updated theme applied
+
+    Note over U,BP: Error Handling
+    U->>DS: Perform data operation
+    DS->>LS: storage operation
+    LS-->>DS: error occurred
+    DS->>DS: handleError(error)
+    DS-->>U: Show error message
+    DS->>DS: logError(error)
+
+    Note over U,BP: Data Backup
+    U->>DS: Request data export
+    DS->>LS: get("familyData")
+    LS-->>DS: family data
+    DS->>LS: get("blogPosts")
+    LS-->>DS: blog data
+    DS->>LS: get("archives")
+    LS-->>DS: archive data
+    DS->>DS: createBackupFile(allData)
+    DS-->>U: Download backup file
+
+    Note over U,BP: Responsive Layout Update
+    U->>L: Resize browser window
+    L->>L: handleResize()
+    L->>L: updateLayoutMode(screenSize)
+    L->>N: updateNavigation(isMobile)
+    N-->>L: updated navigation
+    L-->>U: Responsive layout applied
