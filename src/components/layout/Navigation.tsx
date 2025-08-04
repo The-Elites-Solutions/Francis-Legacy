@@ -61,8 +61,15 @@ export default function Navigation() {
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="gold-text">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id="hamburger-gold-texture" patternUnits="userSpaceOnUse" width="24" height="24">
+                        <image href="/assets/yellow-wall-texture-with-scratches.jpg" width="24" height="24" />
+                      </pattern>
+                    </defs>
+                    <path d="M3 12h18M3 6h18M3 18h18" stroke="url(#hamburger-gold-texture)" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="bg-white">
@@ -71,19 +78,19 @@ export default function Navigation() {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.href;
                     return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        onClick={() => setIsOpen(false)}
-                        className={`px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 flex items-center space-x-3 ${
-                          isActive
-                            ? 'gold-text font-semibold'
-                            : 'text-foreground hover:gold-text'
-                        }`}
-                      >
-                        <Icon className={`w-5 h-5 ${isActive ? 'gold-text' : ''}`} />
-                        <span>{item.name}</span>
-                      </Link>
+                        <Link
+                            key={item.name}
+                            to={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={`px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 flex items-center space-x-3 ${
+                                isActive
+                                    ? 'gold-text font-semibold'
+                                    : 'text-foreground hover:gold-text'
+                            }`}
+                        >
+                          <Icon className={`w-5 h-5 ${isActive ? 'gold-text' : ''}`} />
+                          <span>{item.name}</span>
+                        </Link>
                     );
                   })}
                 </div>
