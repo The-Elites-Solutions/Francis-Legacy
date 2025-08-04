@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Download, Eye, Calendar, FileText, Image, Video, File } from 'lucide-react';
+import { Search, Filter, Calendar, FileText, Image, Video, File } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -172,14 +172,14 @@ export default function Archives() {
   };
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Family <span className="text-yellow-400">Archives</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Family <span className="gold-text">Archives</span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Our digital repository of family documents, photos, videos, and memorabilia. 
             Preserving precious memories and important records for future generations.
           </p>
@@ -189,24 +189,24 @@ export default function Archives() {
         <div className="mb-12 space-y-6">
           <div className="flex justify-center">
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
               <Input
                 placeholder="Search archives..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-900/50 border-yellow-400/20 text-white placeholder-gray-400"
+                className="pl-10 bg-white border-primary/30 text-foreground placeholder-foreground/50 shadow-sm"
               />
             </div>
           </div>
           
           <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="bg-gray-900/50 border-yellow-400/20 text-white">
+              <SelectTrigger className="bg-white border-primary/30 text-foreground shadow-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-yellow-400/20">
+              <SelectContent className="bg-white border-primary/30">
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category} className="text-white hover:text-yellow-400">
+                  <SelectItem key={category} value={category} className="text-foreground hover:gold-text">
                     {category}
                   </SelectItem>
                 ))}
@@ -214,12 +214,12 @@ export default function Archives() {
             </Select>
 
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="bg-gray-900/50 border-yellow-400/20 text-white">
+              <SelectTrigger className="bg-white border-primary/30 text-foreground shadow-sm">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-yellow-400/20">
+              <SelectContent className="bg-white border-primary/30">
                 {types.map((type) => (
-                  <SelectItem key={type} value={type} className="text-white hover:text-yellow-400">
+                  <SelectItem key={type} value={type} className="text-foreground hover:gold-text">
                     {type === 'All' ? 'All Types' : type.charAt(0).toUpperCase() + type.slice(1)}
                   </SelectItem>
                 ))}
@@ -227,12 +227,12 @@ export default function Archives() {
             </Select>
 
             <Select value={selectedDecade} onValueChange={setSelectedDecade}>
-              <SelectTrigger className="bg-gray-900/50 border-yellow-400/20 text-white">
+              <SelectTrigger className="bg-white border-primary/30 text-foreground shadow-sm">
                 <SelectValue placeholder="Era" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-yellow-400/20">
+              <SelectContent className="bg-white border-primary/30">
                 {decades.map((decade) => (
-                  <SelectItem key={decade} value={decade} className="text-white hover:text-yellow-400">
+                  <SelectItem key={decade} value={decade} className="text-foreground hover:gold-text">
                     {decade === 'All' ? 'All Eras' : decade}
                   </SelectItem>
                 ))}
@@ -246,7 +246,7 @@ export default function Archives() {
           {filteredItems.map((item) => {
             const TypeIcon = getTypeIcon(item.type);
             return (
-              <Card key={item.id} className="bg-gray-900/50 border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-300 group">
+              <Card key={item.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
                 <div className="aspect-video overflow-hidden rounded-t-lg relative">
                   <img 
                     src={item.thumbnail} 
@@ -257,25 +257,25 @@ export default function Archives() {
                     <TypeIcon className="w-3 h-3" />
                     <span className="text-xs font-medium capitalize">{item.type}</span>
                   </div>
-                  <div className="absolute top-3 right-3 bg-black/70 text-white px-2 py-1 rounded-md text-xs">
+                  <div className="absolute top-3 right-3 bg-white/90 text-foreground/90 px-2 py-1 rounded-md text-xs shadow-sm">
                     {item.fileSize}
                   </div>
                 </div>
                 
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="border-yellow-400/30 text-yellow-400 text-xs">
+                    <Badge variant="outline" className="border-primary/30 gold-text text-xs">
                       {item.category}
                     </Badge>
-                    <div className="flex items-center text-gray-400 text-xs">
-                      <Calendar className="w-3 h-3 mr-1" />
+                    <div className="flex items-center text-foreground/60 text-xs">
+                      <Calendar className="w-3 h-3 mr-1 gold-text" />
                       {new Date(item.date).getFullYear()}
                     </div>
                   </div>
-                  <CardTitle className="text-white group-hover:text-yellow-400 transition-colors text-lg">
+                  <CardTitle className="text-foreground group-hover:gold-text transition-colors text-lg">
                     {item.title}
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription className="text-foreground/70">
                     {item.description}
                   </CardDescription>
                 </CardHeader>
@@ -283,35 +283,109 @@ export default function Archives() {
                 <CardContent>
                   <div className="space-y-3">
                     {item.person && (
-                      <div className="text-sm text-gray-300">
-                        <span className="text-yellow-400">Person:</span> {item.person}
+                      <div className="text-sm text-foreground/80">
+                        <span className="gold-text">Person:</span> {item.person}
                       </div>
                     )}
                     {item.location && (
-                      <div className="text-sm text-gray-300">
-                        <span className="text-yellow-400">Location:</span> {item.location}
+                      <div className="text-sm text-foreground/80">
+                        <span className="gold-text">Location:</span> {item.location}
                       </div>
                     )}
                     
                     <div className="flex flex-wrap gap-1">
                       {item.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="bg-yellow-400/10 text-yellow-400 text-xs">
+                        <Badge key={tag} variant="secondary" className="bg-primary/10 gold-text text-xs">
                           {tag}
                         </Badge>
                       ))}
                     </div>
 
                     <div className="flex items-center justify-between pt-2">
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-foreground/60">
                         {item.format} • {item.fileSize}
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400 hover:text-black">
-                          <Eye className="w-3 h-3 mr-1" />
+                        <Button size="sm" variant="outline" className="border-primary/30 gold-text hover:bg-primary/5">
+                          <span className="relative w-3 h-3 mr-1">
+                            <svg 
+                              width="12" 
+                              height="12" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="absolute inset-0"
+                            >
+                              <defs>
+                                <mask id="eye-mask">
+                                  <path 
+                                    d="M12 4C14.5 4 16.5 5 18 6.5C19.5 8 20.5 10 21 12C20.5 14 19.5 16 18 17.5C16.5 19 14.5 20 12 20C9.5 20 7.5 19 6 17.5C4.5 16 3.5 14 3 12C3.5 10 4.5 8 6 6.5C7.5 5 9.5 4 12 4ZM12 8C10.9 8 10 8.9 10 10C10 11.1 10.9 12 12 12C13.1 12 14 11.1 14 10C14 8.9 13.1 8 12 8Z"
+                                    fill="white"
+                                  />
+                                </mask>
+                              </defs>
+                              <rect
+                                width="24"
+                                height="24"
+                                fill="url(#eye-gold-pattern)"
+                                mask="url(#eye-mask)"
+                              />
+                              <pattern 
+                                id="eye-gold-pattern" 
+                                patternUnits="userSpaceOnUse" 
+                                width="100%" 
+                                height="100%"
+                              >
+                                <image 
+                                  href="/assets/yellow-wall-texture-with-scratches.jpg" 
+                                  width="24" 
+                                  height="24" 
+                                  preserveAspectRatio="xMidYMid slice"
+                                />
+                              </pattern>
+                            </svg>
+                          </span>
                           View
                         </Button>
-                        <Button size="sm" variant="outline" className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400 hover:text-black">
-                          <Download className="w-3 h-3 mr-1" />
+                        <Button size="sm" variant="outline" className="border-primary/30 gold-text hover:bg-primary/5">
+                          <span className="relative w-3 h-3 mr-1">
+                            <svg 
+                              width="12" 
+                              height="12" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="absolute inset-0"
+                            >
+                              <defs>
+                                <mask id="download-mask">
+                                  <path 
+                                    d="M12 2C13.1 2 14 2.9 14 4V12L17.5 8.5L19 10L12 17L5 10L6.5 8.5L10 12V4C10 2.9 10.9 2 12 2ZM12 18L19 11V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V11L12 18Z"
+                                    fill="white"
+                                  />
+                                </mask>
+                              </defs>
+                              <rect
+                                width="24"
+                                height="24"
+                                fill="url(#download-gold-pattern)"
+                                mask="url(#download-mask)"
+                              />
+                              <pattern 
+                                id="download-gold-pattern" 
+                                patternUnits="userSpaceOnUse" 
+                                width="100%" 
+                                height="100%"
+                              >
+                                <image 
+                                  href="/assets/yellow-wall-texture-with-scratches.jpg" 
+                                  width="24" 
+                                  height="24" 
+                                  preserveAspectRatio="xMidYMid slice"
+                                />
+                              </pattern>
+                            </svg>
+                          </span>
                           Save
                         </Button>
                       </div>
@@ -325,52 +399,60 @@ export default function Archives() {
 
         {/* Archive Statistics */}
         <div className="grid md:grid-cols-4 gap-6 mb-16">
-          <Card className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border-yellow-400/30 text-center">
+          <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <FileText className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-yellow-400 mb-1">156</div>
-              <div className="text-gray-300 text-sm">Documents</div>
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-2xl font-bold gold-text mb-1">156</div>
+              <div className="text-foreground/70 text-sm">Documents</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border-yellow-400/30 text-center">
+          <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <Image className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-yellow-400 mb-1">2,847</div>
-              <div className="text-gray-300 text-sm">Photos</div>
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+                <Image className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-2xl font-bold gold-text mb-1">2,847</div>
+              <div className="text-foreground/70 text-sm">Photos</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border-yellow-400/30 text-center">
+          <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <Video className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-yellow-400 mb-1">67</div>
-              <div className="text-gray-300 text-sm">Videos</div>
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+                <Video className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-2xl font-bold gold-text mb-1">67</div>
+              <div className="text-foreground/70 text-sm">Videos</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border-yellow-400/30 text-center">
+          <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <Calendar className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-yellow-400 mb-1">150+</div>
-              <div className="text-gray-300 text-sm">Years Covered</div>
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-2xl font-bold gold-text mb-1">150+</div>
+              <div className="text-foreground/70 text-sm">Years Covered</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Upload Section */}
         <div className="text-center">
-          <Card className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border-yellow-400/30">
+          <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <div className="w-16 h-16 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-8 h-8 text-yellow-400" />
+              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Contribute to Our Archives</h3>
-              <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-foreground mb-4">Contribute to Our Archives</h3>
+              <p className="text-foreground/70 mb-6 max-w-2xl mx-auto">
                 Do you have family documents, photos, or memorabilia to add to our collection? 
                 Help us preserve our family history by sharing your treasures.
               </p>
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold">
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
                 Upload Documents
               </Button>
             </CardContent>

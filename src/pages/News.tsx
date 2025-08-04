@@ -95,14 +95,14 @@ export default function News() {
   const regularNews = filteredNews.filter(item => !item.featured);
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Family <span className="text-yellow-400">News</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Family <span className="gold-text">News</span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Stay connected with the latest updates, celebrations, and milestones 
             from our family members around the world.
           </p>
@@ -111,12 +111,12 @@ export default function News() {
         {/* Search and Filter */}
         <div className="mb-12 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
             <Input
               placeholder="Search family news..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-900/50 border-yellow-400/20 text-white placeholder-gray-400"
+              className="pl-10 bg-white border-primary/30 text-foreground placeholder-foreground/50 shadow-sm"
             />
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -127,8 +127,8 @@ export default function News() {
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 className={selectedCategory === category 
-                  ? "bg-yellow-400 text-black hover:bg-yellow-500" 
-                  : "border-yellow-400/30 text-gray-300 hover:border-yellow-400 hover:text-yellow-400"
+                  ? "gold-texture text-white hover:opacity-90" 
+                  : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
                 {category}
@@ -140,13 +140,13 @@ export default function News() {
         {/* Featured News */}
         {featuredNews.length > 0 && (
           <div className="mb-16">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
-              <span className="bg-yellow-400 text-black px-3 py-1 rounded-md text-sm mr-3">Featured</span>
+            <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
+              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
               Important Announcements
             </h2>
             <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
               {featuredNews.map((item) => (
-                <Card key={item.id} className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border-yellow-400/30 hover:border-yellow-400/50 transition-all duration-300">
+                <Card key={item.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 hover:shadow-lg">
                   <div className="aspect-video overflow-hidden rounded-t-lg">
                     <img 
                       src={item.image} 
@@ -156,28 +156,28 @@ export default function News() {
                   </div>
                   <CardHeader>
                     <div className="flex items-center justify-between mb-2">
-                      <Badge className="bg-yellow-400 text-black">
+                      <Badge className="gold-texture text-white">
                         {item.category}
                       </Badge>
-                      <div className="flex items-center text-gray-400 text-sm">
-                        <Calendar className="w-4 h-4 mr-1" />
+                      <div className="flex items-center text-foreground/60 text-sm">
+                        <Calendar className="w-4 h-4 mr-1 gold-text" />
                         {new Date(item.date).toLocaleDateString()}
                       </div>
                     </div>
-                    <CardTitle className="text-white text-xl">{item.title}</CardTitle>
-                    <CardDescription className="text-gray-300">
+                    <CardTitle className="text-foreground text-xl">{item.title}</CardTitle>
+                    <CardDescription className="text-foreground/80">
                       {item.excerpt}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center space-x-3">
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="w-8 h-8 border border-primary/20">
                         <AvatarImage src={item.authorImage} />
-                        <AvatarFallback className="bg-yellow-400/20 text-yellow-400 text-xs">
+                        <AvatarFallback className="bg-primary/10 gold-text text-xs">
                           {item.author.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-gray-400 text-sm">{item.author}</span>
+                      <span className="text-foreground/70 text-sm">{item.author}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -188,10 +188,10 @@ export default function News() {
 
         {/* Regular News */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-8">Recent Updates</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-8">Recent Updates</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularNews.map((item) => (
-              <Card key={item.id} className="bg-gray-900/50 border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-300 group">
+              <Card key={item.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
                 <div className="aspect-video overflow-hidden rounded-t-lg">
                   <img 
                     src={item.image} 
@@ -201,33 +201,33 @@ export default function News() {
                 </div>
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="border-yellow-400/30 text-yellow-400">
+                    <Badge variant="outline" className="border-primary/30 gold-text">
                       {item.category}
                     </Badge>
-                    <div className="flex items-center text-gray-400 text-sm">
-                      <Calendar className="w-4 h-4 mr-1" />
+                    <div className="flex items-center text-foreground/60 text-sm">
+                      <Calendar className="w-4 h-4 mr-1 gold-text" />
                       {new Date(item.date).toLocaleDateString()}
                     </div>
                   </div>
-                  <CardTitle className="text-white group-hover:text-yellow-400 transition-colors">
+                  <CardTitle className="text-foreground group-hover:gold-text transition-colors">
                     {item.title}
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription className="text-foreground/70">
                     {item.excerpt}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="w-8 h-8 border border-primary/20">
                         <AvatarImage src={item.authorImage} />
-                        <AvatarFallback className="bg-yellow-400/20 text-yellow-400 text-xs">
+                        <AvatarFallback className="bg-primary/10 gold-text text-xs">
                           {item.author.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-gray-400 text-sm">{item.author}</span>
+                      <span className="text-foreground/70 text-sm">{item.author}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-yellow-400 hover:text-yellow-300 p-0 h-auto">
+                    <Button variant="ghost" size="sm" className="gold-text hover:text-primary p-0 h-auto">
                       Read more
                     </Button>
                   </div>
@@ -239,14 +239,17 @@ export default function News() {
 
         {/* Call to Action */}
         <div className="mt-20 text-center">
-          <Card className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border-yellow-400/30">
+          <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <h3 className="text-2xl font-bold text-white mb-4">Have Family News to Share?</h3>
-              <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
+                <Calendar className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-4">Have Family News to Share?</h3>
+              <p className="text-foreground/70 mb-6 max-w-2xl mx-auto">
                 Help keep our family connected by sharing your updates, achievements, and special moments. 
                 Every story matters and contributes to our rich family tapestry.
               </p>
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold">
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
                 Share Your News
               </Button>
             </CardContent>

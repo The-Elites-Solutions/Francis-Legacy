@@ -6,57 +6,57 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 41 28% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 41 28% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 41 28% 18%;
+    --primary: 41 65% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 41 15% 90%;
+    --secondary-foreground: 41 28% 18%;
+    --muted: 41 15% 95%;
+    --muted-foreground: 41 15% 35%;
+    --accent: 41 65% 90%;
+    --accent-foreground: 41 28% 18%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --border: 41 30% 80%;
+    --input: 41 30% 85%;
+    --ring: 41 65% 50%;
+    --chart-1: 41 65% 50%;
+    --chart-2: 41 55% 55%;
+    --chart-3: 41 45% 60%;
+    --chart-4: 41 35% 65%;
+    --chart-5: 41 25% 70%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222 12% 12%;
-    --foreground: 0 0% 98%;
-    --card: 222 12% 16%;
-    --card-foreground: 0 0% 98%;
-    --popover: 222 12% 16%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 210 75% 68%;
-    --primary-foreground: 222 12% 12%;
-    --secondary: 217 32% 22%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 217 32% 22%;
-    --muted-foreground: 215 20% 70%;
-    --accent: 142 76% 65%;
-    --accent-foreground: 222 12% 12%;
-    --destructive: 0 84% 60%;
+    --background: 41 30% 95%;
+    --foreground: 41 28% 18%;
+    --card: 41 30% 97%;
+    --card-foreground: 41 28% 18%;
+    --popover: 41 30% 97%;
+    --popover-foreground: 41 28% 18%;
+    --primary: 41 65% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 41 15% 90%;
+    --secondary-foreground: 41 28% 18%;
+    --muted: 41 15% 95%;
+    --muted-foreground: 41 15% 35%;
+    --accent: 41 65% 90%;
+    --accent-foreground: 41 28% 18%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 217 32% 22%;
-    --input: 217 32% 22%;
-    --ring: 210 75% 68%;
-    --chart-1: 220 85% 70%;
-    --chart-2: 160 75% 65%;
-    --chart-3: 30 90% 68%;
-    --chart-4: 280 80% 72%;
-    --chart-5: 340 85% 68%;
+    --border: 41 30% 80%;
+    --input: 41 30% 85%;
+    --ring: 41 65% 50%;
+    --chart-1: 41 65% 50%;
+    --chart-2: 41 55% 55%;
+    --chart-3: 41 45% 60%;
+    --chart-4: 41 35% 65%;
+    --chart-5: 41 25% 70%;
   }
 }
 
@@ -127,20 +127,56 @@
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* Gold texture utility classes */
+.gold-texture {
+  background-image: url('/assets/yellow-wall-texture-with-scratches.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Gold texture specifically for SVG fills */
+.gold-texture-fill {
+  mask: url(#heart-mask);
+  -webkit-mask: url(#heart-mask);
+}
+
+.gold-text {
+  background-image: url('/assets/yellow-wall-texture-with-scratches.jpg');
+  background-size: 100% 120%; /* Increased height to ensure descenders are covered */
+  background-position: center 90%; /* Shift background position down slightly */
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.15em; /* Add padding at bottom to accommodate descenders */
+  line-height: 1.2; /* Adjust line height for better text rendering */
+  display: inline-block; /* Change to inline-block to respect padding */
+}
+
+.gold-border {
+  border-image: url('/assets/yellow-wall-texture-with-scratches.jpg') 1;
+  border-style: solid;
+}
+
+.gold-gradient {
+  background: linear-gradient(to right, #d4af37, #f2d279, #d4af37);
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(17 24 39);
+  background: rgb(255 255 255);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(245 158 11 / 0.3);
+  background: url('/assets/yellow-wall-texture-with-scratches.jpg');
+  background-size: cover;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(245 158 11 / 0.5);
+  opacity: 0.8;
 }

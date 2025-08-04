@@ -18,16 +18,16 @@ export default function Navigation() {
   const location = useLocation();
 
   return (
-    <nav className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-yellow-400/20">
+    <nav className="sticky top-0 z-50 bg-white shadow-md border-b border-primary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
-                <span className="text-black font-bold text-sm">FL</span>
+              <div className="w-8 h-8 gold-texture rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm drop-shadow-sm">FL</span>
               </div>
-              <span className="text-yellow-400 font-bold text-xl hidden sm:block">
+              <span className="gold-text font-bold text-xl hidden sm:block">
                 Francis Legacy
               </span>
             </Link>
@@ -45,11 +45,11 @@ export default function Navigation() {
                     to={item.href}
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2 ${
                       isActive
-                        ? 'text-yellow-400 bg-yellow-400/10'
-                        : 'text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/5'
+                        ? 'gold-text font-semibold'
+                        : 'text-foreground hover:gold-text'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className={`w-4 h-4 ${isActive ? 'gold-text' : ''}`} />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -61,11 +61,11 @@ export default function Navigation() {
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-yellow-400">
+                <Button variant="ghost" size="icon" className="gold-text">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-black border-yellow-400/20">
+              <SheetContent side="right" className="bg-white">
                 <div className="flex flex-col space-y-4 mt-4">
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
@@ -77,11 +77,11 @@ export default function Navigation() {
                         onClick={() => setIsOpen(false)}
                         className={`px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 flex items-center space-x-3 ${
                           isActive
-                            ? 'text-yellow-400 bg-yellow-400/10'
-                            : 'text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/5'
+                            ? 'gold-text font-semibold'
+                            : 'text-foreground hover:gold-text'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
+                        <Icon className={`w-5 h-5 ${isActive ? 'gold-text' : ''}`} />
                         <span>{item.name}</span>
                       </Link>
                     );

@@ -108,14 +108,14 @@ export default function Blog() {
   const regularPosts = filteredPosts.filter(post => !post.featured);
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Family <span className="text-yellow-400">Blog</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Family <span className="gold-text">Blog</span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Personal stories, memories, and experiences shared by family members. 
             Each post adds another layer to our rich family narrative.
           </p>
@@ -125,12 +125,12 @@ export default function Blog() {
         <div className="mb-12 space-y-6">
           <div className="flex justify-center">
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
               <Input
                 placeholder="Search blog posts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-900/50 border-yellow-400/20 text-white placeholder-gray-400"
+                className="pl-10 bg-white border-primary/30 text-foreground placeholder-foreground/50 shadow-sm"
               />
             </div>
           </div>
@@ -141,8 +141,8 @@ export default function Blog() {
               variant={!selectedTag ? "default" : "outline"}
               size="sm"
               className={!selectedTag 
-                ? "bg-yellow-400 text-black hover:bg-yellow-500" 
-                : "border-yellow-400/30 text-gray-300 hover:border-yellow-400 hover:text-yellow-400"
+                ? "gold-texture text-white hover:opacity-90" 
+                : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
               }
             >
               All Posts
@@ -154,8 +154,8 @@ export default function Blog() {
                 variant={selectedTag === tag ? "default" : "outline"}
                 size="sm"
                 className={selectedTag === tag 
-                  ? "bg-yellow-400 text-black hover:bg-yellow-500" 
-                  : "border-yellow-400/30 text-gray-300 hover:border-yellow-400 hover:text-yellow-400"
+                  ? "gold-texture text-white hover:opacity-90" 
+                  : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
                 <Tag className="w-3 h-3 mr-1" />
@@ -168,13 +168,13 @@ export default function Blog() {
         {/* Featured Posts */}
         {featuredPosts.length > 0 && (
           <div className="mb-16">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
-              <span className="bg-yellow-400 text-black px-3 py-1 rounded-md text-sm mr-3">Featured</span>
+            <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
+              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
               Stories Worth Reading
             </h2>
             <div className="grid lg:grid-cols-1 gap-8">
               {featuredPosts.map((post) => (
-                <Card key={post.id} className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border-yellow-400/30 hover:border-yellow-400/50 transition-all duration-300">
+                <Card key={post.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 hover:shadow-lg transition-all duration-300">
                   <div className="grid md:grid-cols-2 gap-0">
                     <div className="aspect-video md:aspect-square overflow-hidden rounded-l-lg">
                       <img 
@@ -187,23 +187,23 @@ export default function Blog() {
                       <div>
                         <div className="flex items-center space-x-2 mb-4">
                           {post.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="border-yellow-400/30 text-yellow-400">
+                            <Badge key={tag} variant="outline" className="border-primary/30 gold-text">
                               {tag}
                             </Badge>
                           ))}
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-3">{post.title}</h3>
-                        <p className="text-gray-300 mb-4">{post.excerpt}</p>
+                        <h3 className="text-2xl font-bold text-foreground mb-3">{post.title}</h3>
+                        <p className="text-foreground/80 mb-4">{post.excerpt}</p>
                       </div>
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between text-sm text-gray-400">
+                        <div className="flex items-center justify-between text-sm text-foreground/60">
                           <div className="flex items-center space-x-4">
                             <div className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1" />
+                              <Calendar className="w-4 h-4 mr-1 gold-text" />
                               {new Date(post.date).toLocaleDateString()}
                             </div>
                             <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-1" />
+                              <Clock className="w-4 h-4 mr-1 gold-text" />
                               {post.readTime}
                             </div>
                           </div>
@@ -211,20 +211,20 @@ export default function Blog() {
                         
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <Avatar className="w-10 h-10">
+                            <Avatar className="w-10 h-10 border border-primary/20">
                               <AvatarImage src={post.authorImage} />
-                              <AvatarFallback className="bg-yellow-400/20 text-yellow-400">
+                              <AvatarFallback className="bg-primary/10 gold-text">
                                 {post.author.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="text-white font-medium">{post.author}</div>
+                              <div className="text-foreground font-medium">{post.author}</div>
                               {post.authorBio && (
-                                <div className="text-gray-400 text-sm">{post.authorBio}</div>
+                                <div className="text-foreground/60 text-sm">{post.authorBio}</div>
                               )}
                             </div>
                           </div>
-                          <Button className="bg-yellow-400 hover:bg-yellow-500 text-black">
+                          <Button className="gold-texture text-white hover:opacity-90">
                             Read Story
                           </Button>
                         </div>
@@ -239,10 +239,10 @@ export default function Blog() {
 
         {/* Regular Posts */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-8">Recent Stories</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-8">Recent Stories</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularPosts.map((post) => (
-              <Card key={post.id} className="bg-gray-900/50 border-yellow-400/20 hover:border-yellow-400/40 transition-all duration-300 group">
+              <Card key={post.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
                 <div className="aspect-video overflow-hidden rounded-t-lg">
                   <img 
                     src={post.image} 
@@ -253,41 +253,41 @@ export default function Blog() {
                 <CardHeader>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {post.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="border-yellow-400/30 text-yellow-400 text-xs">
+                      <Badge key={tag} variant="outline" className="border-primary/30 gold-text text-xs">
                         {tag}
                       </Badge>
                     ))}
                   </div>
-                  <CardTitle className="text-white group-hover:text-yellow-400 transition-colors">
+                  <CardTitle className="text-foreground group-hover:gold-text transition-colors">
                     {post.title}
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription className="text-foreground/70">
                     {post.excerpt}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+                  <div className="flex items-center justify-between text-sm text-foreground/60 mb-4">
                     <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
+                      <Calendar className="w-4 h-4 mr-1 gold-text" />
                       {new Date(post.date).toLocaleDateString()}
                     </div>
                     <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
+                      <Clock className="w-4 h-4 mr-1 gold-text" />
                       {post.readTime}
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="w-8 h-8 border border-primary/20">
                         <AvatarImage src={post.authorImage} />
-                        <AvatarFallback className="bg-yellow-400/20 text-yellow-400 text-xs">
+                        <AvatarFallback className="bg-primary/10 gold-text text-xs">
                           {post.author.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-gray-400 text-sm">{post.author}</span>
+                      <span className="text-foreground/70 text-sm">{post.author}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-yellow-400 hover:text-yellow-300 p-0 h-auto">
+                    <Button variant="ghost" size="sm" className="gold-text hover:text-primary p-0 h-auto">
                       Read more
                     </Button>
                   </div>
@@ -299,15 +299,17 @@ export default function Blog() {
 
         {/* Call to Action */}
         <div className="mt-20 text-center">
-          <Card className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border-yellow-400/30">
+          <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <BookOpen className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-white mb-4">Share Your Story</h3>
-              <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
+                <BookOpen className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-4">Share Your Story</h3>
+              <p className="text-foreground/70 mb-6 max-w-2xl mx-auto">
                 Do you have a family story, memory, or experience you'd like to share? 
                 Your contributions help preserve our family legacy for future generations.
               </p>
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold">
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
                 Write a Blog Post
               </Button>
             </CardContent>
