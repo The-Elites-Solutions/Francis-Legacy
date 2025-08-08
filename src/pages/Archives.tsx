@@ -307,85 +307,9 @@ export default function Archives() {
                       </div>
                       <div className="flex space-x-2">
                         <Button size="sm" variant="outline" className="border-primary/30 gold-text hover:bg-primary/5">
-                          <span className="relative w-3 h-3 mr-1">
-                            <svg 
-                              width="12" 
-                              height="12" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="absolute inset-0"
-                            >
-                              <defs>
-                                <mask id="eye-mask">
-                                  <path 
-                                    d="M12 4C14.5 4 16.5 5 18 6.5C19.5 8 20.5 10 21 12C20.5 14 19.5 16 18 17.5C16.5 19 14.5 20 12 20C9.5 20 7.5 19 6 17.5C4.5 16 3.5 14 3 12C3.5 10 4.5 8 6 6.5C7.5 5 9.5 4 12 4ZM12 8C10.9 8 10 8.9 10 10C10 11.1 10.9 12 12 12C13.1 12 14 11.1 14 10C14 8.9 13.1 8 12 8Z"
-                                    fill="white"
-                                  />
-                                </mask>
-                              </defs>
-                              <rect
-                                width="24"
-                                height="24"
-                                fill="url(#eye-gold-pattern)"
-                                mask="url(#eye-mask)"
-                              />
-                              <pattern 
-                                id="eye-gold-pattern" 
-                                patternUnits="userSpaceOnUse" 
-                                width="100%" 
-                                height="100%"
-                              >
-                                <image 
-                                  href="/assets/yellow-wall-texture-with-scratches.jpg" 
-                                  width="24" 
-                                  height="24" 
-                                  preserveAspectRatio="xMidYMid slice"
-                                />
-                              </pattern>
-                            </svg>
-                          </span>
                           View
                         </Button>
                         <Button size="sm" variant="outline" className="border-primary/30 gold-text hover:bg-primary/5">
-                          <span className="relative w-3 h-3 mr-1">
-                            <svg 
-                              width="12" 
-                              height="12" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="absolute inset-0"
-                            >
-                              <defs>
-                                <mask id="download-mask">
-                                  <path 
-                                    d="M12 2C13.1 2 14 2.9 14 4V12L17.5 8.5L19 10L12 17L5 10L6.5 8.5L10 12V4C10 2.9 10.9 2 12 2ZM12 18L19 11V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V11L12 18Z"
-                                    fill="white"
-                                  />
-                                </mask>
-                              </defs>
-                              <rect
-                                width="24"
-                                height="24"
-                                fill="url(#download-gold-pattern)"
-                                mask="url(#download-mask)"
-                              />
-                              <pattern 
-                                id="download-gold-pattern" 
-                                patternUnits="userSpaceOnUse" 
-                                width="100%" 
-                                height="100%"
-                              >
-                                <image 
-                                  href="/assets/yellow-wall-texture-with-scratches.jpg" 
-                                  width="24" 
-                                  height="24" 
-                                  preserveAspectRatio="xMidYMid slice"
-                                />
-                              </pattern>
-                            </svg>
-                          </span>
                           Save
                         </Button>
                       </div>

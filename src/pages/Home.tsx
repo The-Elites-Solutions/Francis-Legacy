@@ -49,14 +49,14 @@ export default function Home() {
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
               Our Family
-              <span className="block text-amber-500">Legacy Lives Here</span>
+              <span className="block text-yellow-600">Legacy Lives Here</span>
             </h1>
             <p className="text-xl text-foreground/70 mb-8 leading-relaxed">
               Welcome to the Francis Legacy digital collection. Explore generations of stories,
               memories, and connections that make us who we are today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-amber-500 text-white font-semibold hover:opacity-90">
+              <Button size="lg" className="bg-yellow-600 text-white font-semibold hover:opacity-90">
                 <Link to="/family-tree" className="flex items-center">
                   Explore Family Tree
                   <ArrowRight className="ml-2 w-5 h-5" />

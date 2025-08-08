@@ -27,7 +27,7 @@ export default function Navigation() {
               <div className="w-8 h-8 gold-texture rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm drop-shadow-sm">FL</span>
               </div>
-              <span className="gold-text font-bold text-xl hidden sm:block">
+              <span className="text-yellow-600 font-bold text-xl hidden sm:block">
                 Francis Legacy
               </span>
             </Link>
@@ -45,7 +45,7 @@ export default function Navigation() {
                     to={item.href}
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2 ${
                       isActive
-                        ? 'gold-text font-semibold'
+                        ? 'text-yellow-600 font-semibold'
                         : 'text-foreground hover:gold-text'
                     }`}
                   >
