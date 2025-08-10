@@ -75,7 +75,7 @@ export default function FamilyHistory() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Our Family <span className="gold-text">History</span>
+            Our Family <span className="text-yellow-600">History</span>
           </h1>
           <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Journey through time and discover the stories that shaped our family legacy. 
@@ -102,7 +102,7 @@ export default function FamilyHistory() {
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 className={selectedCategory === category 
-                  ? "gold-texture text-white hover:opacity-90" 
+                  ? "text-yellow-600ure text-white hover:opacity-90" 
                   : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
@@ -115,29 +115,29 @@ export default function FamilyHistory() {
         {/* Timeline */}
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 gold-texture"></div>
+          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 text-yellow-600ure"></div>
 
           <div className="space-y-12">
             {filteredEvents.map((event, index) => (
               <div key={index} className={`relative flex flex-col md:flex-row items-center ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
                 {/* Timeline dot */}
-                <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 gold-texture rounded-full border-4 border-white z-10 shadow-md"></div>
+                <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 text-yellow-600ure rounded-full border-4 border-white z-10 shadow-md"></div>
 
                 {/* Content */}
                 <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}>
                   <Card className="bg-white border-primary/30 hover:border-primary/60 transition-all duration-300 shadow-md hover:shadow-lg">
                     <CardHeader>
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="border-primary/30 gold-text">
+                        <Badge variant="outline" className="border-primary/30 text-yellow-600">
                           {event.year}
                         </Badge>
-                        <Badge variant="secondary" className="bg-primary/10 gold-text border-0">
+                        <Badge variant="secondary" className="bg-primary/10 text-yellow-600 border-0">
                           {event.category}
                         </Badge>
                       </div>
                       <CardTitle className="text-foreground text-xl">{event.title}</CardTitle>
                       <CardDescription className="text-foreground/70 flex items-center">
-                        <MapPin className="w-4 h-4 mr-1 gold-text" />
+                        <MapPin className="w-4 h-4 mr-1 text-yellow-600" />
                         {event.location}
                       </CardDescription>
                     </CardHeader>
@@ -156,7 +156,7 @@ export default function FamilyHistory() {
 
                 {/* Year indicator for desktop */}
                 <div className={`hidden md:block w-1/2 ${index % 2 === 0 ? 'pl-8' : 'pr-8'}`}>
-                  <div className={`text-6xl font-bold gold-text opacity-20 ${index % 2 === 0 ? 'text-left' : 'text-right'}`}>
+                  <div className={`text-6xl font-bold text-yellow-600 opacity-20 ${index % 2 === 0 ? 'text-left' : 'text-right'}`}>
                     {event.year}
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export default function FamilyHistory() {
         <div className="mt-20 grid md:grid-cols-3 gap-8">
           <Card className="bg-white shadow-md border-primary/30 hover:shadow-lg transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-foreground">150+ Years</CardTitle>
@@ -179,7 +179,7 @@ export default function FamilyHistory() {
 
           <Card className="bg-white shadow-md border-primary/30 hover:shadow-lg transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-foreground">5 Generations</CardTitle>
@@ -189,7 +189,7 @@ export default function FamilyHistory() {
 
           <Card className="bg-white shadow-md border-primary/30 hover:shadow-lg transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-foreground">12 Countries</CardTitle>

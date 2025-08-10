@@ -38,6 +38,10 @@ All shadcn/ui components are pre-installed in `src/components/ui/`. The project 
 - **Supabase** for backend services
 - **TanStack Query** for data fetching
 - **Lucide React** for icons
+- **date-fns** for date manipulation
+- **Recharts** for data visualization
+- **Zod** for schema validation
+- **React Hook Form** with Hookform Resolvers for form handling
 
 ### Project Structure
 This is a **hybrid codebase** with a Vite/React primary application and Next.js artifacts:
@@ -126,6 +130,8 @@ import { Heart, User, Calendar } from 'lucide-react'
 - `components.json`: shadcn/ui configuration for component management
 - `tsconfig.json`: TypeScript configuration with path aliases and relaxed settings
 - `package.json`: Vite-based development workflow with ESLint
+- `eslint.config.js`: ESLint configuration targeting src/ directory only
+- `postcss.config.js`: PostCSS configuration for Tailwind processing
 
 ### Development Notes
 - **Active Build System**: Vite (ignore Next.js references in /app directory)

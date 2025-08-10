@@ -24,7 +24,7 @@ export default function Navigation() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 gold-texture rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 text-yellow-600ure rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm drop-shadow-sm">FL</span>
               </div>
               <span className="text-yellow-600 font-bold text-xl hidden sm:block">
@@ -46,10 +46,10 @@ export default function Navigation() {
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2 ${
                       isActive
                         ? 'text-yellow-600 font-semibold'
-                        : 'text-foreground hover:gold-text'
+                        : 'text-foreground hover:text-yellow-600'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'gold-text' : ''}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-yellow-600' : ''}`} />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -64,11 +64,11 @@ export default function Navigation() {
                 <Button variant="ghost" size="icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                      <pattern id="hamburger-gold-texture" patternUnits="userSpaceOnUse" width="24" height="24">
+                      <pattern id="hamburger-text-yellow-600ure" patternUnits="userSpaceOnUse" width="24" height="24">
                         <image href="/assets/yellow-wall-texture-with-scratches.jpg" width="24" height="24" />
                       </pattern>
                     </defs>
-                    <path d="M3 12h18M3 6h18M3 18h18" stroke="url(#hamburger-gold-texture)" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M3 12h18M3 6h18M3 18h18" stroke="url(#hamburger-text-yellow-600ure)" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                 </Button>
               </SheetTrigger>
@@ -84,11 +84,11 @@ export default function Navigation() {
                             onClick={() => setIsOpen(false)}
                             className={`px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 flex items-center space-x-3 ${
                                 isActive
-                                    ? 'gold-text font-semibold'
-                                    : 'text-foreground hover:gold-text'
+                                    ? 'text-yellow-600 font-semibold'
+                                    : 'text-foreground hover:text-yellow-600'
                             }`}
                         >
-                          <Icon className={`w-5 h-5 ${isActive ? 'gold-text' : ''}`} />
+                          <Icon className={`w-5 h-5 ${isActive ? 'text-yellow-600' : ''}`} />
                           <span>{item.name}</span>
                         </Link>
                     );

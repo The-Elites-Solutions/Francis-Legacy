@@ -140,18 +140,7 @@
   -webkit-mask: url(#heart-mask);
 }
 
-.gold-text {
-  background-image: url('/assets/yellow-wall-texture-with-scratches.jpg');
-  background-size: 100% 120%; /* Increased height to ensure descenders are covered */
-  background-position: center 90%; /* Shift background position down slightly */
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding-bottom: 0.15em; /* Add padding at bottom to accommodate descenders */
-  line-height: 1.2; /* Adjust line height for better text rendering */
-  display: inline-block; /* Change to inline-block to respect padding */
-}
+/* Removed gold-text utility class - replaced with text-yellow-600 */
 
 .gold-border {
   border-image: url('/assets/yellow-wall-texture-with-scratches.jpg') 1;

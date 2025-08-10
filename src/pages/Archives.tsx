@@ -177,7 +177,7 @@ export default function Archives() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Family <span className="gold-text">Archives</span>
+            Family <span className="text-yellow-600">Archives</span>
           </h1>
           <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Our digital repository of family documents, photos, videos, and memorabilia. 
@@ -206,7 +206,7 @@ export default function Archives() {
               </SelectTrigger>
               <SelectContent className="bg-white border-primary/30">
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category} className="text-foreground hover:gold-text">
+                  <SelectItem key={category} value={category} className="text-foreground hover:text-yellow-600">
                     {category}
                   </SelectItem>
                 ))}
@@ -219,7 +219,7 @@ export default function Archives() {
               </SelectTrigger>
               <SelectContent className="bg-white border-primary/30">
                 {types.map((type) => (
-                  <SelectItem key={type} value={type} className="text-foreground hover:gold-text">
+                  <SelectItem key={type} value={type} className="text-foreground hover:text-yellow-600">
                     {type === 'All' ? 'All Types' : type.charAt(0).toUpperCase() + type.slice(1)}
                   </SelectItem>
                 ))}
@@ -232,7 +232,7 @@ export default function Archives() {
               </SelectTrigger>
               <SelectContent className="bg-white border-primary/30">
                 {decades.map((decade) => (
-                  <SelectItem key={decade} value={decade} className="text-foreground hover:gold-text">
+                  <SelectItem key={decade} value={decade} className="text-foreground hover:text-yellow-600">
                     {decade === 'All' ? 'All Eras' : decade}
                   </SelectItem>
                 ))}
@@ -264,15 +264,15 @@ export default function Archives() {
                 
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="border-primary/30 gold-text text-xs">
+                    <Badge variant="outline" className="border-primary/30 text-yellow-600 text-xs">
                       {item.category}
                     </Badge>
                     <div className="flex items-center text-foreground/60 text-xs">
-                      <Calendar className="w-3 h-3 mr-1 gold-text" />
+                      <Calendar className="w-3 h-3 mr-1 text-yellow-600" />
                       {new Date(item.date).getFullYear()}
                     </div>
                   </div>
-                  <CardTitle className="text-foreground group-hover:gold-text transition-colors text-lg">
+                  <CardTitle className="text-foreground group-hover:text-yellow-600 transition-colors text-lg">
                     {item.title}
                   </CardTitle>
                   <CardDescription className="text-foreground/70">
@@ -284,18 +284,18 @@ export default function Archives() {
                   <div className="space-y-3">
                     {item.person && (
                       <div className="text-sm text-foreground/80">
-                        <span className="gold-text">Person:</span> {item.person}
+                        <span className="text-yellow-600">Person:</span> {item.person}
                       </div>
                     )}
                     {item.location && (
                       <div className="text-sm text-foreground/80">
-                        <span className="gold-text">Location:</span> {item.location}
+                        <span className="text-yellow-600">Location:</span> {item.location}
                       </div>
                     )}
                     
                     <div className="flex flex-wrap gap-1">
                       {item.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="bg-primary/10 gold-text text-xs">
+                        <Badge key={tag} variant="secondary" className="bg-primary/10 text-yellow-600 text-xs">
                           {tag}
                         </Badge>
                       ))}
@@ -306,10 +306,10 @@ export default function Archives() {
                         {item.format} • {item.fileSize}
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="border-primary/30 gold-text hover:bg-primary/5">
+                        <Button size="sm" variant="outline" className="border-primary/30 text-yellow-600 hover:bg-primary/5">
                           View
                         </Button>
-                        <Button size="sm" variant="outline" className="border-primary/30 gold-text hover:bg-primary/5">
+                        <Button size="sm" variant="outline" className="border-primary/30 text-yellow-600 hover:bg-primary/5">
                           Save
                         </Button>
                       </div>
@@ -325,40 +325,40 @@ export default function Archives() {
         <div className="grid md:grid-cols-4 gap-6 mb-16">
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
                 <FileText className="w-8 h-8 text-white" />
               </div>
-              <div className="text-2xl font-bold gold-text mb-1">156</div>
+              <div className="text-2xl font-bold text-yellow-600 mb-1">156</div>
               <div className="text-foreground/70 text-sm">Documents</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
                 <Image className="w-8 h-8 text-white" />
               </div>
-              <div className="text-2xl font-bold gold-text mb-1">2,847</div>
+              <div className="text-2xl font-bold text-yellow-600 mb-1">2,847</div>
               <div className="text-foreground/70 text-sm">Photos</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
                 <Video className="w-8 h-8 text-white" />
               </div>
-              <div className="text-2xl font-bold gold-text mb-1">67</div>
+              <div className="text-2xl font-bold text-yellow-600 mb-1">67</div>
               <div className="text-foreground/70 text-sm">Videos</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
                 <Calendar className="w-8 h-8 text-white" />
               </div>
-              <div className="text-2xl font-bold gold-text mb-1">150+</div>
+              <div className="text-2xl font-bold text-yellow-600 mb-1">150+</div>
               <div className="text-foreground/70 text-sm">Years Covered</div>
             </CardContent>
           </Card>
@@ -368,7 +368,7 @@ export default function Archives() {
         <div className="text-center">
           <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Contribute to Our Archives</h3>
@@ -376,7 +376,7 @@ export default function Archives() {
                 Do you have family documents, photos, or memorabilia to add to our collection? 
                 Help us preserve our family history by sharing your treasures.
               </p>
-              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
+              <Button className="text-yellow-600ure text-white hover:opacity-90 font-semibold">
                 Upload Documents
               </Button>
             </CardContent>

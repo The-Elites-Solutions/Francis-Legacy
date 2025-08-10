@@ -113,7 +113,7 @@ export default function Blog() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Family <span className="gold-text">Blog</span>
+            Family <span className="text-yellow-600">Blog</span>
           </h1>
           <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Personal stories, memories, and experiences shared by family members. 
@@ -141,7 +141,7 @@ export default function Blog() {
               variant={!selectedTag ? "default" : "outline"}
               size="sm"
               className={!selectedTag 
-                ? "gold-texture text-white hover:opacity-90" 
+                ? "text-yellow-600ure text-white hover:opacity-90" 
                 : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
               }
             >
@@ -154,7 +154,7 @@ export default function Blog() {
                 variant={selectedTag === tag ? "default" : "outline"}
                 size="sm"
                 className={selectedTag === tag 
-                  ? "gold-texture text-white hover:opacity-90" 
+                  ? "text-yellow-600ure text-white hover:opacity-90" 
                   : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
@@ -169,7 +169,7 @@ export default function Blog() {
         {featuredPosts.length > 0 && (
           <div className="mb-16">
             <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
-              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
+              <span className="text-yellow-600ure text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
               Stories Worth Reading
             </h2>
             <div className="grid lg:grid-cols-1 gap-8">
@@ -187,7 +187,7 @@ export default function Blog() {
                       <div>
                         <div className="flex items-center space-x-2 mb-4">
                           {post.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="border-primary/30 gold-text">
+                            <Badge key={tag} variant="outline" className="border-primary/30 text-yellow-600">
                               {tag}
                             </Badge>
                           ))}
@@ -199,11 +199,11 @@ export default function Blog() {
                         <div className="flex items-center justify-between text-sm text-foreground/60">
                           <div className="flex items-center space-x-4">
                             <div className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1 gold-text" />
+                              <Calendar className="w-4 h-4 mr-1 text-yellow-600" />
                               {new Date(post.date).toLocaleDateString()}
                             </div>
                             <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-1 gold-text" />
+                              <Clock className="w-4 h-4 mr-1 text-yellow-600" />
                               {post.readTime}
                             </div>
                           </div>
@@ -213,7 +213,7 @@ export default function Blog() {
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10 border border-primary/20">
                               <AvatarImage src={post.authorImage} />
-                              <AvatarFallback className="bg-primary/10 gold-text">
+                              <AvatarFallback className="bg-primary/10 text-yellow-600">
                                 {post.author.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
@@ -224,7 +224,7 @@ export default function Blog() {
                               )}
                             </div>
                           </div>
-                          <Button className="gold-texture text-white hover:opacity-90">
+                          <Button className="text-yellow-600ure text-white hover:opacity-90">
                             Read Story
                           </Button>
                         </div>
@@ -253,12 +253,12 @@ export default function Blog() {
                 <CardHeader>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {post.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="border-primary/30 gold-text text-xs">
+                      <Badge key={tag} variant="outline" className="border-primary/30 text-yellow-600 text-xs">
                         {tag}
                       </Badge>
                     ))}
                   </div>
-                  <CardTitle className="text-foreground group-hover:gold-text transition-colors">
+                  <CardTitle className="text-foreground group-hover:text-yellow-600 transition-colors">
                     {post.title}
                   </CardTitle>
                   <CardDescription className="text-foreground/70">
@@ -268,11 +268,11 @@ export default function Blog() {
                 <CardContent>
                   <div className="flex items-center justify-between text-sm text-foreground/60 mb-4">
                     <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1 gold-text" />
+                      <Calendar className="w-4 h-4 mr-1 text-yellow-600" />
                       {new Date(post.date).toLocaleDateString()}
                     </div>
                     <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1 gold-text" />
+                      <Clock className="w-4 h-4 mr-1 text-yellow-600" />
                       {post.readTime}
                     </div>
                   </div>
@@ -281,13 +281,13 @@ export default function Blog() {
                     <div className="flex items-center space-x-3">
                       <Avatar className="w-8 h-8 border border-primary/20">
                         <AvatarImage src={post.authorImage} />
-                        <AvatarFallback className="bg-primary/10 gold-text text-xs">
+                        <AvatarFallback className="bg-primary/10 text-yellow-600 text-xs">
                           {post.author.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-foreground/70 text-sm">{post.author}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="gold-text hover:text-primary p-0 h-auto">
+                    <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-primary p-0 h-auto">
                       Read more
                     </Button>
                   </div>
@@ -301,7 +301,7 @@ export default function Blog() {
         <div className="mt-20 text-center">
           <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-6">
                 <BookOpen className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Share Your Story</h3>
@@ -309,7 +309,7 @@ export default function Blog() {
                 Do you have a family story, memory, or experience you'd like to share? 
                 Your contributions help preserve our family legacy for future generations.
               </p>
-              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
+              <Button className="text-yellow-600ure text-white hover:opacity-90 font-semibold">
                 Write a Blog Post
               </Button>
             </CardContent>

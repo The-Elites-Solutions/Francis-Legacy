@@ -153,7 +153,7 @@ export default function FamilyTree() {
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8 lg:mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 sm:mb-4">
-            Family <span className="gold-text">Tree</span>
+            Family <span className="text-yellow-600">Tree</span>
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-foreground/70 max-w-3xl mx-auto px-2 sm:px-0">
             Explore the connections that bind our family together across generations. 
@@ -183,7 +183,7 @@ export default function FamilyTree() {
             <Card className="bg-white border-primary/30 shadow-md">
               <CardHeader className="text-center px-3 sm:px-6 py-4 sm:py-6">
                 <CardTitle className="text-foreground flex items-center justify-center text-lg sm:text-xl">
-                  <User className="w-4 h-4 sm:w-5 sm:h-5 mr-2 gold-text" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-yellow-600" />
                   Interactive Family Tree
                 </CardTitle>
                 <CardDescription className="text-foreground/60 text-sm sm:text-base">
@@ -194,7 +194,7 @@ export default function FamilyTree() {
                 <div className="space-y-8 sm:space-y-12 lg:space-y-16">
                   {/* Generation 1 - Ancestors */}
                   <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold gold-text mb-4 sm:mb-6 lg:mb-8">
+                    <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-4 sm:mb-6 lg:mb-8">
                       First Generation (1840s-1920s)
                     </h3>
                     <div className="flex justify-center">
@@ -203,19 +203,19 @@ export default function FamilyTree() {
                         onClick={() => handleMemberClick('1')}
                         style={{ minWidth: '44px', minHeight: '44px' }}
                       >
-                        <Avatar className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 mb-2 sm:mb-3 ring-2 sm:ring-3 gold-texture group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
+                        <Avatar className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 mb-2 sm:mb-3 ring-2 sm:ring-3 text-yellow-600ure group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
                           <AvatarImage src={familyData[0].photo} />
-                          <AvatarFallback className="gold-texture text-white text-lg sm:text-xl">
+                          <AvatarFallback className="text-yellow-600ure text-white text-lg sm:text-xl">
                             {familyData[0].name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-foreground text-sm sm:text-base font-medium group-hover:gold-text transition-colors text-center max-w-24 sm:max-w-none">
+                        <span className="text-foreground text-sm sm:text-base font-medium group-hover:text-yellow-600 transition-colors text-center max-w-24 sm:max-w-none">
                           {isMobile ? familyData[0].name.split(' ')[0] : familyData[0].name}
                         </span>
                         <span className="text-foreground/60 text-xs sm:text-sm">
                           {familyData[0].birth} - {familyData[0].death}
                         </span>
-                        <span className="gold-text text-xs mt-1 text-center max-w-20 sm:max-w-none leading-tight">
+                        <span className="text-yellow-600 text-xs mt-1 text-center max-w-20 sm:max-w-none leading-tight">
                           {isMobile ? "Baker" : familyData[0].occupation}
                         </span>
                       </div>
@@ -225,16 +225,16 @@ export default function FamilyTree() {
                   {/* Connection Lines */}
                   <div className="flex justify-center my-4 sm:my-6 lg:my-8">
                     <div className="relative w-[200px] sm:w-[250px] lg:w-[300px]">
-                      <div className="h-8 sm:h-12 lg:h-16 w-0.5 gold-texture mx-auto"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 left-1/2 transform -translate-x-1/2 w-full h-0.5 gold-texture"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 left-0 w-0.5 h-4 sm:h-6 lg:h-8 gold-texture"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 right-0 w-0.5 h-4 sm:h-6 lg:h-8 gold-texture"></div>
+                      <div className="h-8 sm:h-12 lg:h-16 w-0.5 text-yellow-600ure mx-auto"></div>
+                      <div className="absolute top-4 sm:top-6 lg:top-8 left-1/2 transform -translate-x-1/2 w-full h-0.5 text-yellow-600ure"></div>
+                      <div className="absolute top-4 sm:top-6 lg:top-8 left-0 w-0.5 h-4 sm:h-6 lg:h-8 text-yellow-600ure"></div>
+                      <div className="absolute top-4 sm:top-6 lg:top-8 right-0 w-0.5 h-4 sm:h-6 lg:h-8 text-yellow-600ure"></div>
                     </div>
                   </div>
 
                   {/* Generation 2 - Children */}
                   <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold gold-text mb-4 sm:mb-6 lg:mb-8">
+                    <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-4 sm:mb-6 lg:mb-8">
                       Second Generation (1870s-1960s)
                     </h3>
                     <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 pb-2">
@@ -245,19 +245,19 @@ export default function FamilyTree() {
                           onClick={() => handleMemberClick(member.id)}
                           style={{ minWidth: '44px', minHeight: '44px' }}
                         >
-                          <Avatar className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 ring-2 gold-texture/80 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
+                          <Avatar className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 ring-2 text-yellow-600ure/80 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
                             <AvatarImage src={member.photo} />
-                            <AvatarFallback className="gold-texture text-white text-sm sm:text-base">
+                            <AvatarFallback className="text-yellow-600ure text-white text-sm sm:text-base">
                               {member.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-foreground text-xs sm:text-sm font-medium group-hover:gold-text transition-colors text-center max-w-16 sm:max-w-20 lg:max-w-24 leading-tight">
+                          <span className="text-foreground text-xs sm:text-sm font-medium group-hover:text-yellow-600 transition-colors text-center max-w-16 sm:max-w-20 lg:max-w-24 leading-tight">
                             {isMobile ? member.name.split(' ')[0] : member.name}
                           </span>
                           <span className="text-foreground/60 text-xs leading-tight">
                             {member.birth} - {member.death}
                           </span>
-                          <span className="gold-text text-xs mt-1 text-center max-w-16 sm:max-w-18 lg:max-w-20 leading-tight">
+                          <span className="text-yellow-600 text-xs mt-1 text-center max-w-16 sm:max-w-18 lg:max-w-20 leading-tight">
                             {isMobile 
                               ? (member.occupation?.includes('Baker') ? 'Baker' : 
                                  member.occupation?.includes('Police') ? 'Police' :
@@ -273,12 +273,12 @@ export default function FamilyTree() {
 
                   {/* Connection Lines for Generation 3 */}
                   <div className="flex justify-center">
-                    <div className="h-6 sm:h-8 lg:h-12 w-0.5 gold-texture/80"></div>
+                    <div className="h-6 sm:h-8 lg:h-12 w-0.5 text-yellow-600ure/80"></div>
                   </div>
 
                   {/* Generation 3 - Grandchildren */}
                   <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold gold-text mb-4 sm:mb-6 lg:mb-8">
+                    <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-4 sm:mb-6 lg:mb-8">
                       Third Generation (1900s-1980s)
                     </h3>
                     <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 pb-2">
@@ -289,19 +289,19 @@ export default function FamilyTree() {
                           onClick={() => handleMemberClick(member.id)}
                           style={{ minWidth: '44px', minHeight: '44px' }}
                         >
-                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-2 ring-2 gold-texture/70 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
+                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-2 ring-2 text-yellow-600ure/70 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
                             <AvatarImage src={member.photo} />
-                            <AvatarFallback className="gold-texture text-white text-xs sm:text-sm">
+                            <AvatarFallback className="text-yellow-600ure text-white text-xs sm:text-sm">
                               {member.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-foreground text-xs sm:text-sm font-medium group-hover:gold-text transition-colors text-center max-w-14 sm:max-w-16 lg:max-w-20 leading-tight">
+                          <span className="text-foreground text-xs sm:text-sm font-medium group-hover:text-yellow-600 transition-colors text-center max-w-14 sm:max-w-16 lg:max-w-20 leading-tight">
                             {isMobile ? member.name.split(' ')[0] : member.name}
                           </span>
                           <span className="text-foreground/60 text-xs leading-tight">
                             {member.birth} - {member.death}
                           </span>
-                          <span className="gold-text text-xs mt-1 text-center max-w-14 sm:max-w-16 lg:max-w-20 leading-tight">
+                          <span className="text-yellow-600 text-xs mt-1 text-center max-w-14 sm:max-w-16 lg:max-w-20 leading-tight">
                             {isMobile ? 'Carpenter' : member.occupation}
                           </span>
                         </div>
@@ -320,28 +320,28 @@ export default function FamilyTree() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold gold-text mb-1 sm:mb-2">127</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">127</div>
               <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Total Members</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold gold-text mb-1 sm:mb-2">6</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">6</div>
               <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Generations</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold gold-text mb-1 sm:mb-2">18</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">18</div>
               <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Countries</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold gold-text mb-1 sm:mb-2">1848</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">1848</div>
               <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Earliest Record</div>
             </CardContent>
           </Card>
@@ -354,10 +354,10 @@ export default function FamilyTree() {
           {selectedMemberData && (
             <>
               <DialogHeader className="pb-4 sm:pb-6">
-                <DialogTitle className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 text-xl sm:text-2xl gold-text">
-                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 ring-2 gold-texture flex-shrink-0">
+                <DialogTitle className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 text-xl sm:text-2xl text-yellow-600">
+                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 ring-2 text-yellow-600ure flex-shrink-0">
                     <AvatarImage src={selectedMemberData.photo} />
-                    <AvatarFallback className="gold-texture text-white text-lg sm:text-xl">
+                    <AvatarFallback className="text-yellow-600ure text-white text-lg sm:text-xl">
                       {selectedMemberData.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -375,29 +375,29 @@ export default function FamilyTree() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <h4 className="gold-text font-semibold mb-2 text-base sm:text-lg">Basic Information</h4>
+                      <h4 className="text-yellow-600 font-semibold mb-2 text-base sm:text-lg">Basic Information</h4>
                       <div className="space-y-2 text-sm sm:text-base">
                         {selectedMemberData.occupation && (
                           <div className="flex items-start space-x-2">
-                            <User className="w-4 h-4 gold-text mt-0.5 flex-shrink-0" />
+                            <User className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                             <span className="leading-tight text-foreground">{selectedMemberData.occupation}</span>
                           </div>
                         )}
                         {selectedMemberData.birthLocation && (
                           <div className="flex items-start space-x-2">
-                            <MapPin className="w-4 h-4 gold-text mt-0.5 flex-shrink-0" />
+                            <MapPin className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                             <span className="leading-tight text-foreground">Born in {selectedMemberData.birthLocation}</span>
                           </div>
                         )}
                         {selectedMemberData.deathLocation && (
                           <div className="flex items-start space-x-2">
-                            <MapPin className="w-4 h-4 gold-text mt-0.5 flex-shrink-0" />
+                            <MapPin className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                             <span className="leading-tight text-foreground">Died in {selectedMemberData.deathLocation}</span>
                           </div>
                         )}
                         {selectedMemberData.spouse && (
                           <div className="flex items-start space-x-2">
-                            <Heart className="w-4 h-4 gold-text mt-0.5 flex-shrink-0" />
+                            <Heart className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                             <span className="leading-tight text-foreground">Married to {selectedMemberData.spouse}</span>
                           </div>
                         )}
@@ -407,11 +407,11 @@ export default function FamilyTree() {
                   
                   <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <h4 className="gold-text font-semibold mb-2 text-base sm:text-lg">Family Connections</h4>
+                      <h4 className="text-yellow-600 font-semibold mb-2 text-base sm:text-lg">Family Connections</h4>
                       <div className="space-y-2 text-sm sm:text-base">
                         {selectedMemberData.parents && selectedMemberData.parents.length > 0 && (
                           <div>
-                            <span className="gold-text font-medium">Parents:</span>{' '}
+                            <span className="text-yellow-600 font-medium">Parents:</span>{' '}
                             <span className="leading-tight text-foreground">
                               {selectedMemberData.parents.map(parentId => {
                                 const parent = familyData.find(m => m.id === parentId);
@@ -422,7 +422,7 @@ export default function FamilyTree() {
                         )}
                         {selectedMemberData.children && selectedMemberData.children.length > 0 && (
                           <div>
-                            <span className="gold-text font-medium">Children:</span>{' '}
+                            <span className="text-yellow-600 font-medium">Children:</span>{' '}
                             <span className="leading-tight text-foreground">
                               {selectedMemberData.children.map(childId => {
                                 const child = familyData.find(m => m.id === childId);
@@ -439,7 +439,7 @@ export default function FamilyTree() {
                 {/* Biography */}
                 {selectedMemberData.biography && (
                   <div>
-                    <h4 className="gold-text font-semibold mb-2 text-base sm:text-lg">Life Story</h4>
+                    <h4 className="text-yellow-600 font-semibold mb-2 text-base sm:text-lg">Life Story</h4>
                     <p className="text-foreground/90 leading-relaxed text-sm sm:text-base">{selectedMemberData.biography}</p>
                   </div>
                 )}
@@ -447,7 +447,7 @@ export default function FamilyTree() {
                 {/* Achievements */}
                 {selectedMemberData.achievements && selectedMemberData.achievements.length > 0 && (
                   <div>
-                    <h4 className="gold-text font-semibold mb-2 text-base sm:text-lg">Notable Achievements</h4>
+                    <h4 className="text-yellow-600 font-semibold mb-2 text-base sm:text-lg">Notable Achievements</h4>
                     <ul className="list-disc list-inside space-y-1 text-foreground/90 text-sm sm:text-base">
                       {selectedMemberData.achievements.map((achievement, index) => (
                         <li key={index} className="leading-relaxed">{achievement}</li>
@@ -459,7 +459,7 @@ export default function FamilyTree() {
                 {/* Memories */}
                 {selectedMemberData.memories && (
                   <div className="pb-2">
-                    <h4 className="gold-text font-semibold mb-2 text-base sm:text-lg">Family Memories</h4>
+                    <h4 className="text-yellow-600 font-semibold mb-2 text-base sm:text-lg">Family Memories</h4>
                     <p className="text-foreground/80 leading-relaxed italic text-sm sm:text-base">"{selectedMemberData.memories}"</p>
                   </div>
                 )}

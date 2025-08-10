@@ -80,7 +80,7 @@ export default function Home() {
               const Icon = stat.icon;
               return (
                 <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 gold-texture rounded-lg mb-4">
+                  <div className="inline-flex items-center justify-center w-12 h-12 text-yellow-600ure rounded-lg mb-4">
                     <Icon className="w-6 h-6 text-white drop-shadow-sm" />
                   </div>
                   <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
@@ -109,14 +109,14 @@ export default function Home() {
             {quickLinks.map((link, index) => (
               <Card key={index} className="bg-white border-primary/20 hover:border-primary/40 shadow-md transition-all duration-300 group">
                 <CardHeader>
-                  <div className="w-12 h-12 rounded-lg gold-texture mb-4 group-hover:scale-110 transition-transform duration-300"></div>
+                  <div className="w-12 h-12 rounded-lg text-yellow-600ure mb-4 group-hover:scale-110 transition-transform duration-300"></div>
                   <CardTitle className="text-foreground text-xl">{link.title}</CardTitle>
                   <CardDescription className="text-foreground/70">
                     {link.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild variant="ghost" className="gold-text p-0 h-auto">
+                  <Button asChild variant="ghost" className="text-yellow-600 p-0 h-auto">
                     <Link to={link.href} className="flex items-center">
                       Explore now
                       <ArrowRight className="ml-2 w-4 h-4" />
