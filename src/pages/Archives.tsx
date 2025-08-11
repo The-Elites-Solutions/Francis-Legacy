@@ -325,7 +325,7 @@ export default function Archives() {
         <div className="grid md:grid-cols-4 gap-6 mb-16">
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
                 <FileText className="w-8 h-8 text-white" />
               </div>
               <div className="text-2xl font-bold text-yellow-600 mb-1">156</div>
@@ -335,7 +335,7 @@ export default function Archives() {
           
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
                 <Image className="w-8 h-8 text-white" />
               </div>
               <div className="text-2xl font-bold text-yellow-600 mb-1">2,847</div>
@@ -345,7 +345,7 @@ export default function Archives() {
           
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
                 <Video className="w-8 h-8 text-white" />
               </div>
               <div className="text-2xl font-bold text-yellow-600 mb-1">67</div>
@@ -355,7 +355,7 @@ export default function Archives() {
           
           <Card className="bg-white shadow-md border-primary/30 text-center">
             <CardContent className="pt-6">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
                 <Calendar className="w-8 h-8 text-white" />
               </div>
               <div className="text-2xl font-bold text-yellow-600 mb-1">150+</div>
@@ -368,7 +368,7 @@ export default function Archives() {
         <div className="text-center">
           <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <div className="w-20 h-20 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Contribute to Our Archives</h3>
@@ -376,7 +376,7 @@ export default function Archives() {
                 Do you have family documents, photos, or memorabilia to add to our collection? 
                 Help us preserve our family history by sharing your treasures.
               </p>
-              <Button className="text-yellow-600ure text-white hover:opacity-90 font-semibold">
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
                 Upload Documents
               </Button>
             </CardContent>

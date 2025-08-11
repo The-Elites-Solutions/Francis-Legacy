@@ -203,9 +203,9 @@ export default function FamilyTree() {
                         onClick={() => handleMemberClick('1')}
                         style={{ minWidth: '44px', minHeight: '44px' }}
                       >
-                        <Avatar className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 mb-2 sm:mb-3 ring-2 sm:ring-3 text-yellow-600ure group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
+                        <Avatar className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 mb-2 sm:mb-3 ring-2 sm:ring-3 gold-texture group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
                           <AvatarImage src={familyData[0].photo} />
-                          <AvatarFallback className="text-yellow-600ure text-white text-lg sm:text-xl">
+                          <AvatarFallback className="gold-texture text-white text-lg sm:text-xl">
                             {familyData[0].name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
@@ -225,10 +225,10 @@ export default function FamilyTree() {
                   {/* Connection Lines */}
                   <div className="flex justify-center my-4 sm:my-6 lg:my-8">
                     <div className="relative w-[200px] sm:w-[250px] lg:w-[300px]">
-                      <div className="h-8 sm:h-12 lg:h-16 w-0.5 text-yellow-600ure mx-auto"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 left-1/2 transform -translate-x-1/2 w-full h-0.5 text-yellow-600ure"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 left-0 w-0.5 h-4 sm:h-6 lg:h-8 text-yellow-600ure"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 right-0 w-0.5 h-4 sm:h-6 lg:h-8 text-yellow-600ure"></div>
+                      <div className="h-8 sm:h-12 lg:h-16 w-0.5 gold-texture mx-auto"></div>
+                      <div className="absolute top-4 sm:top-6 lg:top-8 left-1/2 transform -translate-x-1/2 w-full h-0.5 gold-texture"></div>
+                      <div className="absolute top-4 sm:top-6 lg:top-8 left-0 w-0.5 h-4 sm:h-6 lg:h-8 gold-texture"></div>
+                      <div className="absolute top-4 sm:top-6 lg:top-8 right-0 w-0.5 h-4 sm:h-6 lg:h-8 gold-texture"></div>
                     </div>
                   </div>
 
@@ -245,9 +245,9 @@ export default function FamilyTree() {
                           onClick={() => handleMemberClick(member.id)}
                           style={{ minWidth: '44px', minHeight: '44px' }}
                         >
-                          <Avatar className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 ring-2 text-yellow-600ure/80 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
+                          <Avatar className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 ring-2 gold-texture/80 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
                             <AvatarImage src={member.photo} />
-                            <AvatarFallback className="text-yellow-600ure text-white text-sm sm:text-base">
+                            <AvatarFallback className="gold-texture text-white text-sm sm:text-base">
                               {member.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
@@ -273,7 +273,7 @@ export default function FamilyTree() {
 
                   {/* Connection Lines for Generation 3 */}
                   <div className="flex justify-center">
-                    <div className="h-6 sm:h-8 lg:h-12 w-0.5 text-yellow-600ure/80"></div>
+                    <div className="h-6 sm:h-8 lg:h-12 w-0.5 gold-texture/80"></div>
                   </div>
 
                   {/* Generation 3 - Grandchildren */}
@@ -289,9 +289,9 @@ export default function FamilyTree() {
                           onClick={() => handleMemberClick(member.id)}
                           style={{ minWidth: '44px', minHeight: '44px' }}
                         >
-                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-2 ring-2 text-yellow-600ure/70 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
+                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-2 ring-2 gold-texture/70 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
                             <AvatarImage src={member.photo} />
-                            <AvatarFallback className="text-yellow-600ure text-white text-xs sm:text-sm">
+                            <AvatarFallback className="gold-texture text-white text-xs sm:text-sm">
                               {member.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
@@ -355,9 +355,9 @@ export default function FamilyTree() {
             <>
               <DialogHeader className="pb-4 sm:pb-6">
                 <DialogTitle className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 text-xl sm:text-2xl text-yellow-600">
-                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 ring-2 text-yellow-600ure flex-shrink-0">
+                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 ring-2 gold-texture flex-shrink-0">
                     <AvatarImage src={selectedMemberData.photo} />
-                    <AvatarFallback className="text-yellow-600ure text-white text-lg sm:text-xl">
+                    <AvatarFallback className="gold-texture text-white text-lg sm:text-xl">
                       {selectedMemberData.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>

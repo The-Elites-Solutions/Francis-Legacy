@@ -127,7 +127,7 @@ export default function News() {
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 className={selectedCategory === category 
-                  ? "text-yellow-600ure text-white hover:opacity-90" 
+                  ? "gold-texture text-white hover:opacity-90" 
                   : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
@@ -141,7 +141,7 @@ export default function News() {
         {featuredNews.length > 0 && (
           <div className="mb-16">
             <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
-              <span className="text-yellow-600ure text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
+              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
               Important Announcements
             </h2>
             <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
@@ -156,7 +156,7 @@ export default function News() {
                   </div>
                   <CardHeader>
                     <div className="flex items-center justify-between mb-2">
-                      <Badge className="text-yellow-600ure text-white">
+                      <Badge className="gold-texture text-white">
                         {item.category}
                       </Badge>
                       <div className="flex items-center text-foreground/60 text-sm">
@@ -241,7 +241,7 @@ export default function News() {
         <div className="mt-20 text-center">
           <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <div className="w-20 h-20 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
                 <Calendar className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Have Family News to Share?</h3>
@@ -249,7 +249,7 @@ export default function News() {
                 Help keep our family connected by sharing your updates, achievements, and special moments. 
                 Every story matters and contributes to our rich family tapestry.
               </p>
-              <Button className="text-yellow-600ure text-white hover:opacity-90 font-semibold">
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
                 Share Your News
               </Button>
             </CardContent>

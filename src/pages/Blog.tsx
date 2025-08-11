@@ -141,7 +141,7 @@ export default function Blog() {
               variant={!selectedTag ? "default" : "outline"}
               size="sm"
               className={!selectedTag 
-                ? "text-yellow-600ure text-white hover:opacity-90" 
+                ? "gold-texture text-white hover:opacity-90" 
                 : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
               }
             >
@@ -154,7 +154,7 @@ export default function Blog() {
                 variant={selectedTag === tag ? "default" : "outline"}
                 size="sm"
                 className={selectedTag === tag 
-                  ? "text-yellow-600ure text-white hover:opacity-90" 
+                  ? "gold-texture text-white hover:opacity-90" 
                   : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
@@ -169,7 +169,7 @@ export default function Blog() {
         {featuredPosts.length > 0 && (
           <div className="mb-16">
             <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
-              <span className="text-yellow-600ure text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
+              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
               Stories Worth Reading
             </h2>
             <div className="grid lg:grid-cols-1 gap-8">
@@ -224,7 +224,7 @@ export default function Blog() {
                               )}
                             </div>
                           </div>
-                          <Button className="text-yellow-600ure text-white hover:opacity-90">
+                          <Button className="gold-texture text-white hover:opacity-90">
                             Read Story
                           </Button>
                         </div>
@@ -301,7 +301,7 @@ export default function Blog() {
         <div className="mt-20 text-center">
           <Card className="bg-white shadow-md border-primary/30">
             <CardContent className="py-12">
-              <div className="w-20 h-20 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
                 <BookOpen className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Share Your Story</h3>
@@ -309,7 +309,7 @@ export default function Blog() {
                 Do you have a family story, memory, or experience you'd like to share? 
                 Your contributions help preserve our family legacy for future generations.
               </p>
-              <Button className="text-yellow-600ure text-white hover:opacity-90 font-semibold">
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
                 Write a Blog Post
               </Button>
             </CardContent>

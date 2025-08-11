@@ -9,8 +9,8 @@ export default function NotFound() {
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <Card className="bg-gray-900/50 border-yellow-400/20">
           <CardContent className="py-12">
-            <div className="w-24 h-24 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl font-bold text-yellow-400">404</span>
+            <div className="w-24 h-24 gold-texture rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl font-bold text-white drop-shadow-sm">404</span>
             </div>
             
             <h1 className="text-3xl font-bold text-white mb-4">Page Not Found</h1>

@@ -102,7 +102,7 @@ export default function FamilyHistory() {
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 className={selectedCategory === category 
-                  ? "text-yellow-600ure text-white hover:opacity-90" 
+                  ? "gold-texture text-white hover:opacity-90" 
                   : "border-primary/30 text-foreground hover:border-primary hover:text-primary"
                 }
               >
@@ -115,13 +115,13 @@ export default function FamilyHistory() {
         {/* Timeline */}
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 text-yellow-600ure"></div>
+          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 gold-texture"></div>
 
           <div className="space-y-12">
             {filteredEvents.map((event, index) => (
               <div key={index} className={`relative flex flex-col md:flex-row items-center ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
                 {/* Timeline dot */}
-                <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 text-yellow-600ure rounded-full border-4 border-white z-10 shadow-md"></div>
+                <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 gold-texture rounded-full border-4 border-white z-10 shadow-md"></div>
 
                 {/* Content */}
                 <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}>
@@ -169,7 +169,7 @@ export default function FamilyHistory() {
         <div className="mt-20 grid md:grid-cols-3 gap-8">
           <Card className="bg-white shadow-md border-primary/30 hover:shadow-lg transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-foreground">150+ Years</CardTitle>
@@ -179,7 +179,7 @@ export default function FamilyHistory() {
 
           <Card className="bg-white shadow-md border-primary/30 hover:shadow-lg transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-foreground">5 Generations</CardTitle>
@@ -189,7 +189,7 @@ export default function FamilyHistory() {
 
           <Card className="bg-white shadow-md border-primary/30 hover:shadow-lg transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full text-yellow-600ure flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-foreground">12 Countries</CardTitle>

@@ -1,4 +1,4 @@
-import { ArrowRight, Users, Calendar, Image, FileText } from 'lucide-react';
+import { ArrowRight, Users, Calendar, Image, FileText, BookOpen, TreePine, Newspaper, PenTool } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,25 +15,29 @@ const quickLinks = [
     title: 'Explore Family History',
     description: 'Discover the rich tapestry of our family\'s journey through time',
     href: '/family-history',
-    color: 'from-yellow-400 to-yellow-600'
+    color: 'from-yellow-400 to-yellow-600',
+    icon: BookOpen
   },
   {
     title: 'View Family Tree',
     description: 'Navigate through generations of family connections',
     href: '/family-tree',
-    color: 'from-yellow-500 to-amber-600'
+    color: 'from-yellow-500 to-amber-600',
+    icon: TreePine
   },
   {
     title: 'Latest News',
     description: 'Stay updated with recent family events and announcements',
     href: '/news',
-    color: 'from-amber-400 to-orange-500'
+    color: 'from-amber-400 to-orange-500',
+    icon: Newspaper
   },
   {
     title: 'Family Blog',
     description: 'Read stories and experiences shared by family members',
     href: '/blog',
-    color: 'from-orange-400 to-red-500'
+    color: 'from-orange-400 to-red-500',
+    icon: PenTool
   }
 ];
 
@@ -80,7 +84,7 @@ export default function Home() {
               const Icon = stat.icon;
               return (
                 <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 text-yellow-600ure rounded-lg mb-4">
+                  <div className="inline-flex items-center justify-center w-12 h-12 gold-texture rounded-lg mb-4">
                     <Icon className="w-6 h-6 text-white drop-shadow-sm" />
                   </div>
                   <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
@@ -106,25 +110,30 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {quickLinks.map((link, index) => (
-              <Card key={index} className="bg-white border-primary/20 hover:border-primary/40 shadow-md transition-all duration-300 group">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-lg text-yellow-600ure mb-4 group-hover:scale-110 transition-transform duration-300"></div>
-                  <CardTitle className="text-foreground text-xl">{link.title}</CardTitle>
-                  <CardDescription className="text-foreground/70">
-                    {link.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button asChild variant="ghost" className="text-yellow-600 p-0 h-auto">
-                    <Link to={link.href} className="flex items-center">
-                      Explore now
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {quickLinks.map((link, index) => {
+              const Icon = link.icon;
+              return (
+                <Card key={index} className="bg-white border-primary/20 hover:border-primary/40 shadow-md transition-all duration-300 group">
+                  <CardHeader>
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg gold-texture mb-4 group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
+                      <Icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-sm" />
+                    </div>
+                    <CardTitle className="text-foreground text-xl">{link.title}</CardTitle>
+                    <CardDescription className="text-foreground/70">
+                      {link.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="text-yellow-600 p-0 h-auto">
+                      <Link to={link.href} className="flex items-center">
+                        Explore now
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
