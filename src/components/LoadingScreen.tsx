@@ -7,12 +7,30 @@ interface LoadingScreenProps {
 const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [goldTextureLoaded, setGoldTextureLoaded] = useState(false);
 
   useEffect(() => {
+    // Preload the gold texture image
+    const preloadGoldTexture = () => {
+      const img = new Image();
+      img.onload = () => {
+        setGoldTextureLoaded(true);
+      };
+      img.onerror = () => {
+        // If image fails to load, continue anyway after a delay
+        setTimeout(() => {
+          setGoldTextureLoaded(true);
+        }, 1000);
+      };
+      img.src = '/assets/yellow-wall-texture-with-scratches.jpg';
+    };
+
+    preloadGoldTexture();
+
     // Simulate loading progress
     const interval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 100) {
+        if (prev >= 100 && goldTextureLoaded) {
           clearInterval(interval);
           setIsComplete(true);
           // Wait for fade out animation before calling onLoadingComplete
@@ -21,14 +39,18 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           }, 800);
           return 100;
         }
-        return prev + Math.random() * 15;
+        // Slow down progress if texture isn't loaded yet
+        const increment = goldTextureLoaded ? Math.random() * 15 : Math.random() * 5;
+        return Math.min(prev + increment, goldTextureLoaded ? 100 : 85);
       });
     }, 150);
 
     // Also listen for window load event
     const handleWindowLoad = () => {
       setTimeout(() => {
-        setProgress(100);
+        if (goldTextureLoaded) {
+          setProgress(100);
+        }
       }, 500);
     };
 
@@ -42,7 +64,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
       clearInterval(interval);
       window.removeEventListener('load', handleWindowLoad);
     };
-  }, [onLoadingComplete]);
+  }, [onLoadingComplete, goldTextureLoaded]);
 
   return (
     <div
