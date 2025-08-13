@@ -190,6 +190,129 @@ class ApiClient {
 
     return await response.json();
   }
+
+  // Admin methods
+  async getDashboardStats() {
+    return this.request<{
+      familyMembers: number;
+      familyTreeMembers: number;
+      publishedBlogs: number;
+      publishedNews: number;
+      approvedArchives: number;
+      pendingSubmissions: number;
+    }>('/admin/dashboard/stats');
+  }
+
+  async getUsers() {
+    return this.request<any[]>('/admin/users');
+  }
+
+  async createUser(userData: any) {
+    return this.request<any>('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateUser(id: string, userData: any) {
+    return this.request<any>(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.request<{ message: string }>(`/admin/users/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async resetUserPassword(id: string) {
+    return this.request<any>(`/admin/users/${id}/reset-password`, {
+      method: 'POST',
+    });
+  }
+
+  async getSubmissions() {
+    return this.request<any[]>('/admin/submissions');
+  }
+
+  async reviewSubmission(id: string, status: 'approved' | 'rejected', reviewNotes?: string) {
+    return this.request<any>(`/admin/submissions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, reviewNotes }),
+    });
+  }
+
+  async getAuditLog(page = 1, limit = 50) {
+    return this.request<any>(`/admin/audit-log?page=${page}&limit=${limit}`);
+  }
+
+  // News methods
+  async getNewsArticles() {
+    return this.request<any[]>('/news');
+  }
+
+  async getNewsArticle(slug: string) {
+    return this.request<any>(`/news/${slug}`);
+  }
+
+  async createNewsArticle(articleData: any) {
+    return this.request<any>('/news', {
+      method: 'POST',
+      body: JSON.stringify(articleData),
+    });
+  }
+
+  async updateNewsArticle(id: string, articleData: any) {
+    return this.request<any>(`/news/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(articleData),
+    });
+  }
+
+  async deleteNewsArticle(id: string) {
+    return this.request<{ message: string }>(`/news/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Timeline methods
+  async getTimelineEvents() {
+    return this.request<any[]>('/timeline');
+  }
+
+  async getTimelineEvent(id: string) {
+    return this.request<any>(`/timeline/${id}`);
+  }
+
+  async createTimelineEvent(eventData: any) {
+    return this.request<any>('/timeline', {
+      method: 'POST',
+      body: JSON.stringify(eventData),
+    });
+  }
+
+  async updateTimelineEvent(id: string, eventData: any) {
+    return this.request<any>(`/timeline/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(eventData),
+    });
+  }
+
+  async deleteTimelineEvent(id: string) {
+    return this.request<{ message: string }>(`/timeline/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getTimelineEventsByDateRange(startDate: string, endDate: string) {
+    return this.request<any[]>(`/timeline/range?startDate=${startDate}&endDate=${endDate}`);
+  }
+
+  async getTimelineEventsByType(type: string) {
+    return this.request<any[]>(`/timeline/type/${type}`);
+  }
 }
 
 // Export singleton instance

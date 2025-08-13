@@ -11,7 +11,8 @@ import {
   Settings, 
   LogOut,
   Home,
-  CheckSquare
+  CheckSquare,
+  Clock
 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
@@ -20,13 +21,14 @@ const AdminLayout: React.FC = () => {
 
   // Check if user is admin
   if (!user || user.role !== 'admin') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const navigationItems = [
     { path: '/admin', icon: Home, label: 'Dashboard', exact: true },
     { path: '/admin/users', icon: Users, label: 'Family Members' },
     { path: '/admin/family-tree', icon: TreePine, label: 'Family Tree' },
+    { path: '/admin/timeline', icon: Clock, label: 'Timeline' },
     { path: '/admin/blog', icon: FileText, label: 'Blog Posts' },
     { path: '/admin/news', icon: Newspaper, label: 'News Articles' },
     { path: '/admin/archive', icon: Archive, label: 'Archive' },

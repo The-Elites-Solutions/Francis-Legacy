@@ -13,9 +13,6 @@ out/
 build/
 dist/
 
-# Production
-build/
-dist/
 *.tsbuildinfo
 
 # Runtime data
@@ -25,11 +22,9 @@ pids
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
-coverage/
 *.lcov
 
 # nyc test coverage
-.nyc_output
 
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
@@ -44,11 +39,8 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
 jspm_packages/
 
-# TypeScript cache
-*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -97,9 +89,6 @@ dist
 dist-ssr
 *.local
 
-# Rollup.js default build output
-dist/
-
 # Storybook build outputs
 .out
 .storybook-out
@@ -107,12 +96,6 @@ dist/
 # Temporary folders
 tmp/
 temp/
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
 
 # Logs
 logs

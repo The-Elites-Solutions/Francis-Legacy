@@ -21,11 +21,6 @@ const AdminLogin: React.FC = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  // Redirect if logged in but not admin
-  if (user && user.role !== 'admin') {
-    return <Navigate to="/" replace />;
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -39,6 +34,12 @@ const AdminLogin: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearAuthData = () => {
+    localStorage.removeItem('francis_legacy_user');
+    localStorage.removeItem('francis_legacy_token');
+    window.location.reload();
   };
 
   return (
@@ -145,6 +146,15 @@ const AdminLogin: React.FC = () => {
                 Email: admin@francislegacy.com
                 <br />
                 Password: admin123
+                <br />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearAuthData}
+                  className="mt-2"
+                >
+                  Clear Auth Data
+                </Button>
               </div>
             </CardContent>
           </Card>

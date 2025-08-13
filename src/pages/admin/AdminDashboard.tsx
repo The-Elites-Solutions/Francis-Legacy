@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Users, TreePine, FileText, Newspaper, Archive, CheckSquare } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
@@ -16,21 +18,12 @@ const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/admin/dashboard/stats', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('francis_legacy_token')}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard stats');
-        }
-
-        const data = await response.json();
+        const data = await apiClient.getDashboardStats();
         setStats(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -80,6 +73,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Registered family members',
       icon: Users,
       color: 'bg-blue-500',
+      path: '/admin/users',
     },
     {
       title: 'Family Tree',
@@ -87,6 +81,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Members in family tree',
       icon: TreePine,
       color: 'bg-green-500',
+      path: '/admin/family-tree',
     },
     {
       title: 'Blog Posts',
@@ -94,6 +89,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Published blog posts',
       icon: FileText,
       color: 'bg-purple-500',
+      path: '/admin/blog',
     },
     {
       title: 'News Articles',
@@ -101,6 +97,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Published news articles',
       icon: Newspaper,
       color: 'bg-orange-500',
+      path: '/admin/news',
     },
     {
       title: 'Archive Items',
@@ -108,6 +105,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Approved archive items',
       icon: Archive,
       color: 'bg-yellow-500',
+      path: '/admin/archive',
     },
     {
       title: 'Pending Submissions',
@@ -115,6 +113,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Awaiting review',
       icon: CheckSquare,
       color: 'bg-red-500',
+      path: '/admin/submissions',
     },
   ];
 
@@ -131,24 +130,26 @@ const AdminDashboard: React.FC = () => {
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <Card key={card.title} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {card.title}
-                </CardTitle>
-                <div className={`p-2 rounded-full ${card.color}`}>
-                  <Icon className="h-4 w-4 text-white" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">
-                  {card.value.toLocaleString()}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {card.description}
-                </p>
-              </CardContent>
-            </Card>
+            <Link key={card.title} to={card.path}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer hover:bg-gray-50">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    {card.title}
+                  </CardTitle>
+                  <div className={`p-2 rounded-full ${card.color}`}>
+                    <Icon className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {card.value.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {card.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           );
         })}
       </div>
@@ -194,20 +195,38 @@ const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <div className="font-medium text-sm">Add Family Member</div>
-                <div className="text-xs text-gray-500">Create a new user account</div>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <div className="font-medium text-sm">Review Submissions</div>
-                <div className="text-xs text-gray-500">
-                  {stats?.pendingSubmissions || 0} items awaiting review
+              <Button 
+                variant="outline" 
+                className="w-full justify-start h-auto p-3"
+                onClick={() => navigate('/admin/users')}
+              >
+                <div className="text-left">
+                  <div className="font-medium text-sm">Add Family Member</div>
+                  <div className="text-xs text-gray-500">Create a new user account</div>
                 </div>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <div className="font-medium text-sm">Manage Content</div>
-                <div className="text-xs text-gray-500">Edit blog posts and news</div>
-              </button>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start h-auto p-3"
+                onClick={() => navigate('/admin/submissions')}
+              >
+                <div className="text-left">
+                  <div className="font-medium text-sm">Review Submissions</div>
+                  <div className="text-xs text-gray-500">
+                    {stats?.pendingSubmissions || 0} items awaiting review
+                  </div>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start h-auto p-3"
+                onClick={() => navigate('/admin/blog')}
+              >
+                <div className="text-left">
+                  <div className="font-medium text-sm">Manage Content</div>
+                  <div className="text-xs text-gray-500">Edit blog posts and news</div>
+                </div>
+              </Button>
             </div>
           </CardContent>
         </Card>
