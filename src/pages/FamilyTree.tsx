@@ -1,34 +1,33 @@
-import { useState, useEffect } from 'react';
-import { Search, Plus, User, Heart, Calendar, MapPin, X, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, User, Heart, MapPin, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import ReactFlow, { 
+  Node, 
+  Edge, 
+  Controls, 
+  MiniMap, 
+  Background,
+  ReactFlowProvider,
+  useNodesState,
+  useEdgesState
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import FamilyTreeMemberNode, { FamilyMember, FamilyTreeMemberNodeData } from '@/components/FamilyTreeMemberNode';
+import '@/styles/FamilyTree.css';
 
-interface FamilyMember {
-  id: string;
-  first_name: string;
-  last_name: string;
-  maiden_name?: string;
-  birth_date?: string;
-  death_date?: string;
-  birth_place?: string;
-  occupation?: string;
-  biography?: string;
-  profile_photo_url?: string;
-  father_id?: string;
-  mother_id?: string;
-  spouse_id?: string;
-  created_at: string;
-  updated_at: string;
-}
+// Node types for React Flow
+const nodeTypes = {
+  familyMember: FamilyTreeMemberNode,
+};
 
-// Helper functions to maintain compatibility
+// Helper functions
 const getMemberName = (member: FamilyMember) => `${member.first_name} ${member.last_name}`;
 const getMemberBirth = (member: FamilyMember) => member.birth_date ? new Date(member.birth_date).getFullYear().toString() : '';
 const getMemberDeath = (member: FamilyMember) => member.death_date ? new Date(member.death_date).getFullYear().toString() : undefined;
@@ -49,16 +48,251 @@ const getChildrenIds = (memberId: string, allMembers: FamilyMember[]): string[] 
     .map(m => m.id);
 };
 
+// Family Tree Layout Algorithm
+interface TreeNode {
+  member: FamilyMember;
+  children: TreeNode[];
+  generation: number;
+  x: number;
+  y: number;
+  width: number;
+}
 
-export default function FamilyTree() {
+class FamilyTreeLayout {
+  private members: FamilyMember[];
+  private memberMap: Map<string, FamilyMember>;
+  private processedSpouses: Set<string>;
+
+  constructor(members: FamilyMember[]) {
+    this.members = members;
+    this.memberMap = new Map(members.map(m => [m.id, m]));
+    this.processedSpouses = new Set();
+  }
+
+  // Generate layout with automatic positioning
+  generateLayout(): { nodes: Node<FamilyTreeMemberNodeData>[]; edges: Edge[] } {
+    const rootMembers = this.findRootMembers();
+    const trees = rootMembers.map(root => this.buildTree(root, 0));
+    
+    // Calculate positions
+    this.calculatePositions(trees);
+    
+    // Generate React Flow nodes and edges
+    const nodes = this.createNodes(trees);
+    const edges = this.createEdges();
+    
+    return { nodes, edges };
+  }
+
+  // Find members with no parents (root of family trees)
+  private findRootMembers(): FamilyMember[] {
+    return this.members.filter(member => !member.father_id && !member.mother_id);
+  }
+
+  // Build hierarchical tree structure
+  private buildTree(member: FamilyMember, generation: number): TreeNode {
+    const children = this.getChildren(member.id);
+    const childTrees = children.map(child => this.buildTree(child, generation + 1));
+
+    return {
+      member,
+      children: childTrees,
+      generation,
+      x: 0,
+      y: 0,
+      width: 0
+    };
+  }
+
+  // Get all children of a member
+  private getChildren(memberId: string): FamilyMember[] {
+    return this.members.filter(m => m.father_id === memberId || m.mother_id === memberId);
+  }
+
+  // Calculate x,y positions for all nodes
+  private calculatePositions(trees: TreeNode[]): void {
+    const HORIZONTAL_SPACING = 160;
+    const VERTICAL_SPACING = 200;
+    const NODE_WIDTH = 120;
+
+    // Calculate subtree widths
+    trees.forEach(tree => this.calculateSubtreeWidth(tree, NODE_WIDTH, HORIZONTAL_SPACING));
+
+    // Position trees horizontally
+    let currentX = 0;
+    trees.forEach(tree => {
+      this.positionTree(tree, currentX, 0, VERTICAL_SPACING);
+      currentX += tree.width + HORIZONTAL_SPACING * 2;
+    });
+  }
+
+  // Calculate the width of each subtree
+  private calculateSubtreeWidth(node: TreeNode, nodeWidth: number, spacing: number): number {
+    if (node.children.length === 0) {
+      node.width = nodeWidth;
+    } else {
+      // Calculate total width of children
+      let childrenWidth = 0;
+      node.children.forEach(child => {
+        childrenWidth += this.calculateSubtreeWidth(child, nodeWidth, spacing);
+      });
+      
+      // Add spacing between children
+      if (node.children.length > 1) {
+        childrenWidth += (node.children.length - 1) * spacing;
+      }
+      
+      node.width = Math.max(nodeWidth, childrenWidth);
+    }
+    
+    return node.width;
+  }
+
+  // Position nodes in the tree
+  private positionTree(node: TreeNode, leftX: number, y: number, verticalSpacing: number): void {
+    node.y = y;
+
+    if (node.children.length === 0) {
+      // Leaf node - position at left edge
+      node.x = leftX + node.width / 2;
+    } else {
+      // Position children first
+      let childX = leftX;
+      node.children.forEach(child => {
+        this.positionTree(child, childX, y + verticalSpacing, verticalSpacing);
+        childX += child.width + 160; // spacing between children
+      });
+
+      // Position parent centered above children
+      const firstChild = node.children[0];
+      const lastChild = node.children[node.children.length - 1];
+      node.x = (firstChild.x + lastChild.x) / 2;
+    }
+  }
+
+  // Create React Flow nodes from tree structure
+  private createNodes(trees: TreeNode[]): Node<FamilyTreeMemberNodeData>[] {
+    const nodes: Node<FamilyTreeMemberNodeData>[] = [];
+    
+    const addNodeFromTree = (tree: TreeNode, onNodeClick: (memberId: string) => void) => {
+      // Add the main member node
+      nodes.push({
+        id: tree.member.id,
+        type: 'familyMember',
+        position: { x: tree.x, y: tree.y },
+        data: {
+          member: tree.member,
+          onNodeClick
+        },
+        draggable: false,
+        connectable: false,
+        selectable: false,
+      });
+
+      // Add spouse node if exists and not already processed
+      if (tree.member.spouse_id && !this.processedSpouses.has(tree.member.id)) {
+        const spouse = this.memberMap.get(tree.member.spouse_id);
+        if (spouse) {
+          this.processedSpouses.add(tree.member.id);
+          this.processedSpouses.add(spouse.id);
+          
+          nodes.push({
+            id: spouse.id,
+            type: 'familyMember',
+            position: { x: tree.x + 140, y: tree.y },
+            data: {
+              member: spouse,
+              onNodeClick
+            },
+            draggable: false,
+            connectable: false,
+            selectable: false,
+          });
+        }
+      }
+
+      // Recursively add children
+      tree.children.forEach(child => addNodeFromTree(child, onNodeClick));
+    };
+
+    // We'll set the onNodeClick function later when we have access to it
+    const dummyOnNodeClick = () => {};
+    trees.forEach(tree => addNodeFromTree(tree, dummyOnNodeClick));
+    
+    return nodes;
+  }
+
+  // Create React Flow edges for relationships
+  private createEdges(): Edge[] {
+    const edges: Edge[] = [];
+    const processedSpouseConnections = new Set<string>();
+
+    this.members.forEach(member => {
+      // Parent-child edges
+      if (member.father_id) {
+        edges.push({
+          id: `parent-${member.father_id}-${member.id}`,
+          source: member.father_id,
+          target: member.id,
+          type: 'smoothstep',
+          style: { stroke: '#3b82f6', strokeWidth: 2 },
+          markerEnd: {
+            type: 'arrowclosed',
+            color: '#3b82f6',
+          },
+        });
+      }
+
+      if (member.mother_id) {
+        edges.push({
+          id: `parent-${member.mother_id}-${member.id}`,
+          source: member.mother_id,
+          target: member.id,
+          type: 'smoothstep',
+          style: { stroke: '#3b82f6', strokeWidth: 2 },
+          markerEnd: {
+            type: 'arrowclosed',
+            color: '#3b82f6',
+          },
+        });
+      }
+
+      // Spouse edges (bidirectional, so only create once)
+      if (member.spouse_id) {
+        const spouseConnectionId = [member.id, member.spouse_id].sort().join('-');
+        if (!processedSpouseConnections.has(spouseConnectionId)) {
+          processedSpouseConnections.add(spouseConnectionId);
+          
+          edges.push({
+            id: `spouse-${member.id}-${member.spouse_id}`,
+            source: member.id,
+            target: member.spouse_id,
+            type: 'straight',
+            style: { stroke: '#dc2626', strokeWidth: 3 },
+          });
+        }
+      }
+    });
+
+    return edges;
+  }
+}
+
+// Main Family Tree Component
+function FamilyTreePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [clickedNode, setClickedNode] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // React Flow state
+  const [nodes, setNodes, onNodesChange] = useNodesState<FamilyTreeMemberNodeData>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -94,6 +328,50 @@ export default function FamilyTree() {
     }
   };
 
+  // Handle node click - must be defined before useMemo
+  const handleNodeClick = useCallback((memberId: string) => {
+    setClickedNode(memberId);
+  }, []);
+
+  // Handle view button click - shows the modal
+  const handleViewMember = useCallback((memberId: string) => {
+    setSelectedMember(memberId);
+    setIsModalOpen(true);
+    setClickedNode(null); // Hide the view button after clicking
+  }, []);
+
+  // Generate React Flow layout
+  const { layoutNodes, layoutEdges } = useMemo(() => {
+    if (familyMembers.length === 0) {
+      return { layoutNodes: [], layoutEdges: [] };
+    }
+
+    const layout = new FamilyTreeLayout(familyMembers);
+    const { nodes: generatedNodes, edges: generatedEdges } = layout.generateLayout();
+    
+    // Update nodes with the actual handlers
+    const nodesWithHandlers = generatedNodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        onNodeClick: handleNodeClick,
+        onViewMember: handleViewMember,
+        isClicked: clickedNode === node.data.member.id
+      }
+    }));
+
+    return { 
+      layoutNodes: nodesWithHandlers, 
+      layoutEdges: generatedEdges 
+    };
+  }, [familyMembers, handleNodeClick, handleViewMember, clickedNode]);
+
+  // Update React Flow nodes and edges when layout changes
+  useEffect(() => {
+    setNodes(layoutNodes);
+    setEdges(layoutEdges);
+  }, [layoutNodes, layoutEdges, setNodes, setEdges]);
+
   const filteredMembers = familyMembers.filter(member => {
     const fullName = getMemberName(member).toLowerCase();
     const searchLower = searchQuery.toLowerCase();
@@ -104,15 +382,16 @@ export default function FamilyTree() {
 
   const selectedMemberData = selectedMember ? familyMembers.find(m => m.id === selectedMember) : null;
 
-  const handleMemberClick = (memberId: string) => {
-    setSelectedMember(memberId);
-    setIsModalOpen(true);
-  };
-
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedMember(null);
+    setClickedNode(null);
   };
+
+  // Clear clicked node when clicking outside
+  const handleBackgroundClick = useCallback(() => {
+    setClickedNode(null);
+  }, []);
 
   // Calculate family statistics dynamically
   const totalMembers = familyMembers.length;
@@ -149,16 +428,13 @@ export default function FamilyTree() {
       .filter(year => year !== Infinity)
     ) : new Date().getFullYear();
 
-  // Get root members (no parents)
-  const rootMembers = familyMembers.filter(member => !member.father_id && !member.mother_id);
-
   // Loading state
   if (loading) {
     return (
       <div className="min-h-screen py-4 sm:py-6 lg:py-8 bg-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-yellow-600" />
+          <div className="family-tree-loading">
+            <Loader2 className="h-8 w-8 animate-spin family-tree-loading-spinner" />
             <p className="mt-2 text-gray-600">Loading family tree...</p>
           </div>
         </div>
@@ -171,10 +447,10 @@ export default function FamilyTree() {
     return (
       <div className="min-h-screen py-4 sm:py-6 lg:py-8 bg-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-          <div className="text-center mt-4">
+          <div className="family-tree-error">
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
             <Button onClick={fetchFamilyMembers}>Try Again</Button>
           </div>
         </div>
@@ -192,8 +468,8 @@ export default function FamilyTree() {
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-foreground/70 max-w-3xl mx-auto px-2 sm:px-0">
             Explore the connections that bind our family together across generations. 
-            {!isMobile && "Click on any family member to learn more about their story."}
-            {isMobile && "Tap family members to view their stories."}
+            {!isMobile && " Click on any family member to learn more about their story."}
+            {isMobile && " Tap family members to view their stories."}
           </p>
         </div>
 
@@ -211,7 +487,7 @@ export default function FamilyTree() {
         </div>
       </div>
 
-      {/* Full-width Family Tree Visualization */}
+      {/* React Flow Family Tree */}
       <div className="w-full bg-secondary/30 py-6 sm:py-8 lg:py-12 mb-6 sm:mb-8">
         <div className="max-w-full">
           <div className="w-full px-3 sm:px-6 lg:px-8">
@@ -222,142 +498,37 @@ export default function FamilyTree() {
                   Interactive Family Tree
                 </CardTitle>
                 <CardDescription className="text-foreground/60 text-sm sm:text-base">
-                  {isMobile ? "Tap members for details" : "Click on family members to view their detailed profiles"}
+                  {isMobile ? "Tap a member to select, then tap the view icon for details" : "Click on family members to select, then click the view icon to see their detailed profiles"}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 lg:p-8">
-                <div className="space-y-8 sm:space-y-12 lg:space-y-16">
-                  {/* Generation 1 - Ancestors */}
-                  <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-4 sm:mb-6 lg:mb-8">
-                      First Generation (1840s-1920s)
-                    </h3>
-                    <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8">
-                      {rootMembers.slice(0, 3).map((member) => (
-                        <div 
-                          key={member.id}
-                          className="flex flex-col items-center cursor-pointer group transition-all duration-300 hover:scale-105 active:scale-95 touch-manipulation min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] w-[90px] sm:w-[110px] lg:w-[130px]"
-                          onClick={() => handleMemberClick(member.id)}
-                          style={{ minWidth: '44px', minHeight: '44px' }}
-                        >
-                          <Avatar className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 mb-2 sm:mb-3 ring-2 sm:ring-3 gold-texture group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
-                            <AvatarImage src={member.profile_photo_url} />
-                            <AvatarFallback className="gold-texture text-white text-lg sm:text-xl">
-                              {member.first_name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-foreground text-sm sm:text-base font-medium group-hover:text-yellow-600 transition-colors text-center max-w-24 sm:max-w-none">
-                            {isMobile ? member.first_name : getMemberName(member)}
-                          </span>
-                          <span className="text-foreground/60 text-xs sm:text-sm">
-                            {getMemberBirth(member)} - {getMemberDeath(member) || 'Present'}
-                          </span>
-                          <span className="text-yellow-600 text-xs mt-1 text-center max-w-20 sm:max-w-none leading-tight">
-                            {isMobile ? (member.occupation?.split(' ')[0] || '') : member.occupation}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Connection Lines */}
-                  <div className="flex justify-center my-4 sm:my-6 lg:my-8">
-                    <div className="relative w-[200px] sm:w-[250px] lg:w-[300px]">
-                      <div className="h-8 sm:h-12 lg:h-16 w-0.5 gold-texture mx-auto"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 left-1/2 transform -translate-x-1/2 w-full h-0.5 gold-texture"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 left-0 w-0.5 h-4 sm:h-6 lg:h-8 gold-texture"></div>
-                      <div className="absolute top-4 sm:top-6 lg:top-8 right-0 w-0.5 h-4 sm:h-6 lg:h-8 gold-texture"></div>
-                    </div>
-                  </div>
-
-                  {/* Generation 2 - Children */}
-                  <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-4 sm:mb-6 lg:mb-8">
-                      Second Generation (1870s-1960s)
-                    </h3>
-                    <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 pb-2">
-                      {rootMembers.length > 0 && familyMembers
-                        .filter(member => getParentIds(member).some(parentId => rootMembers.some(root => root.id === parentId)))
-                        .slice(0, 6)
-                        .map((member) => (
-                        <div 
-                          key={member.id}
-                          className="flex flex-col items-center cursor-pointer group transition-all duration-300 hover:scale-105 active:scale-95 touch-manipulation min-h-[110px] sm:min-h-[130px] lg:min-h-[150px] w-[80px] sm:w-[100px] lg:w-[120px]"
-                          onClick={() => handleMemberClick(member.id)}
-                          style={{ minWidth: '44px', minHeight: '44px' }}
-                        >
-                          <Avatar className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 ring-2 gold-texture/80 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
-                            <AvatarImage src={member.profile_photo_url} />
-                            <AvatarFallback className="gold-texture text-white text-sm sm:text-base">
-                              {member.first_name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-foreground text-xs sm:text-sm font-medium group-hover:text-yellow-600 transition-colors text-center max-w-16 sm:max-w-20 lg:max-w-24 leading-tight">
-                            {isMobile ? member.first_name : getMemberName(member)}
-                          </span>
-                          <span className="text-foreground/60 text-xs leading-tight">
-                            {getMemberBirth(member)} - {getMemberDeath(member) || 'Present'}
-                          </span>
-                          <span className="text-yellow-600 text-xs mt-1 text-center max-w-16 sm:max-w-18 lg:max-w-20 leading-tight">
-                            {isMobile 
-                              ? (member.occupation?.includes('Baker') ? 'Baker' : 
-                                 member.occupation?.includes('Police') ? 'Police' :
-                                 member.occupation?.includes('Teacher') ? 'Teacher' :
-                                 member.occupation?.split(' ')[0] || '')
-                              : member.occupation
-                            }
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Connection Lines for Generation 3 */}
-                  <div className="flex justify-center">
-                    <div className="h-6 sm:h-8 lg:h-12 w-0.5 gold-texture/80"></div>
-                  </div>
-
-                  {/* Generation 3 - Grandchildren */}
-                  <div className="text-center">
-                    <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-4 sm:mb-6 lg:mb-8">
-                      Third Generation (1900s-1980s)
-                    </h3>
-                    <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 pb-2">
-                      {familyMembers
-                        .filter(member => {
-                          const parents = getParentIds(member);
-                          return parents.some(parentId => {
-                            const parent = familyMembers.find(p => p.id === parentId);
-                            return parent && getParentIds(parent).some(grandparentId => rootMembers.some(root => root.id === grandparentId));
-                          });
-                        })
-                        .slice(0, 8)
-                        .map((member) => (
-                        <div 
-                          key={member.id}
-                          className="flex flex-col items-center cursor-pointer group transition-all duration-300 hover:scale-105 active:scale-95 touch-manipulation min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] w-[70px] sm:w-[90px] lg:w-[110px]"
-                          onClick={() => handleMemberClick(member.id)}
-                          style={{ minWidth: '44px', minHeight: '44px' }}
-                        >
-                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-2 ring-2 gold-texture/70 group-hover:ring-opacity-100 group-active:ring-opacity-100 transition-all">
-                            <AvatarImage src={member.profile_photo_url} />
-                            <AvatarFallback className="gold-texture text-white text-xs sm:text-sm">
-                              {member.first_name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-foreground text-xs sm:text-sm font-medium group-hover:text-yellow-600 transition-colors text-center max-w-14 sm:max-w-16 lg:max-w-20 leading-tight">
-                            {isMobile ? member.first_name : getMemberName(member)}
-                          </span>
-                          <span className="text-foreground/60 text-xs leading-tight">
-                            {getMemberBirth(member)} - {getMemberDeath(member) || 'Present'}
-                          </span>
-                          <span className="text-yellow-600 text-xs mt-1 text-center max-w-14 sm:max-w-16 lg:max-w-20 leading-tight">
-                            {isMobile ? (member.occupation?.split(' ')[0] || '') : member.occupation}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              <CardContent className="p-0">
+                <div className="family-tree-container" style={{ height: '70vh' }}>
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onPaneClick={handleBackgroundClick}
+                    nodeTypes={nodeTypes}
+                    nodesDraggable={false}
+                    nodesConnectable={false}
+                    elementsSelectable={false}
+                    deleteKeyCode={null}
+                    fitView
+                    fitViewOptions={{
+                      padding: 0.1,
+                      includeHiddenNodes: false,
+                    }}
+                  >
+                    <Background color="#f1f5f9" gap={20} />
+                    <Controls />
+                    <MiniMap 
+                      nodeStrokeColor="#eab308"
+                      nodeColor="#f3f4f6"
+                      maskColor="rgba(234, 179, 8, 0.1)"
+                      position="bottom-right"
+                    />
+                  </ReactFlow>
                 </div>
               </CardContent>
             </Card>
@@ -500,5 +671,14 @@ export default function FamilyTree() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Main export with ReactFlowProvider wrapper
+export default function FamilyTree() {
+  return (
+    <ReactFlowProvider>
+      <FamilyTreePage />
+    </ReactFlowProvider>
   );
 }

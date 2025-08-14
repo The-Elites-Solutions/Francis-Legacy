@@ -1,0 +1,271 @@
+/* Family Tree React Flow Styles */
+
+/* Main container for the React Flow tree */
+.family-tree-container {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Custom React Flow viewport styling */
+.react-flow__viewport {
+  overflow: visible;
+}
+
+/* Family Tree Member Node Styles */
+.family-tree-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  min-height: 140px;
+  padding: 12px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.family-tree-node:hover {
+  border-color: #eab308;
+  box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.2), 0 4px 6px -2px rgba(234, 179, 8, 0.1);
+  transform: translateY(-2px);
+}
+
+.family-tree-node:active {
+  transform: translateY(0);
+}
+
+/* Avatar container */
+.family-tree-node-avatar {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+  border: 2px solid #eab308;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.family-tree-node:hover .family-tree-node-avatar {
+  border-color: #d97706;
+  box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
+}
+
+/* Avatar initials styling */
+.family-tree-node-initials {
+  background: linear-gradient(135deg, #eab308, #f59e0b);
+  color: white;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+/* Member name styling */
+.family-tree-node-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.family-tree-node:hover .family-tree-node-name {
+  color: #eab308;
+}
+
+/* React Flow Edge Styles */
+.react-flow__edge {
+  stroke: #6b7280;
+  stroke-width: 2;
+}
+
+.react-flow__edge.react-flow__edge-parent-child {
+  stroke: #3b82f6;
+  stroke-width: 2;
+}
+
+.react-flow__edge.react-flow__edge-spouse {
+  stroke: #dc2626;
+  stroke-width: 3;
+}
+
+/* React Flow Controls */
+.react-flow__controls {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.react-flow__controls-button {
+  background: white;
+  border-color: #e2e8f0;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.react-flow__controls-button:hover {
+  background: #f8fafc;
+  border-color: #eab308;
+  color: #eab308;
+}
+
+/* React Flow MiniMap */
+.react-flow__minimap {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(234, 179, 8, 0.2);
+  stroke: #eab308;
+  stroke-width: 2;
+}
+
+.react-flow__minimap-node {
+  fill: #eab308;
+  stroke: #d97706;
+}
+
+/* Loading state */
+.family-tree-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  gap: 1rem;
+}
+
+.family-tree-loading-spinner {
+  color: #eab308;
+}
+
+/* Error state */
+.family-tree-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  gap: 1rem;
+  color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .family-tree-node {
+    width: 100px;
+    min-height: 120px;
+    padding: 8px;
+  }
+
+  .family-tree-node-avatar {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 6px;
+  }
+
+  .family-tree-node-initials {
+    font-size: 1rem;
+  }
+
+  .family-tree-node-name {
+    font-size: 0.75rem;
+  }
+
+  .react-flow__controls {
+    bottom: 20px;
+    left: 20px;
+  }
+
+  .react-flow__minimap {
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .family-tree-node {
+    width: 90px;
+    min-height: 110px;
+    padding: 6px;
+  }
+
+  .family-tree-node-avatar {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 4px;
+  }
+
+  .family-tree-node-initials {
+    font-size: 0.875rem;
+  }
+
+  .family-tree-node-name {
+    font-size: 0.7rem;
+  }
+}
+
+/* Animation for nodes appearing */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.family-tree-node {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Stagger animation for multiple nodes */
+.family-tree-node:nth-child(1) { animation-delay: 0.1s; }
+.family-tree-node:nth-child(2) { animation-delay: 0.2s; }
+.family-tree-node:nth-child(3) { animation-delay: 0.3s; }
+.family-tree-node:nth-child(4) { animation-delay: 0.4s; }
+.family-tree-node:nth-child(5) { animation-delay: 0.5s; }
+.family-tree-node:nth-child(6) { animation-delay: 0.6s; }
+.family-tree-node:nth-child(7) { animation-delay: 0.7s; }
+.family-tree-node:nth-child(8) { animation-delay: 0.8s; }
+
+/* Special styling for different relationship types */
+.family-tree-node[data-generation="0"] {
+  border-color: #dc2626;
+}
+
+.family-tree-node[data-generation="0"]:hover {
+  border-color: #991b1b;
+}
+
+.family-tree-node[data-generation="1"] {
+  border-color: #2563eb;
+}
+
+.family-tree-node[data-generation="1"]:hover {
+  border-color: #1d4ed8;
+}
+
+.family-tree-node[data-generation="2"] {
+  border-color: #16a34a;
+}
+
+.family-tree-node[data-generation="2"]:hover {
+  border-color: #15803d;
+}

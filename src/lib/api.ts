@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://16.171.168.132:3001/api';
 
 class ApiClient {
   private baseURL: string;
@@ -14,7 +14,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -31,7 +31,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -148,47 +148,309 @@ class ApiClient {
     });
   }
 
-  // File upload methods
+  // File upload methods using presigned URLs (recommended S3 pattern)
   async uploadFile(file: File, folder: string) {
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      // Step 1: Get presigned URL from backend
+      const presignedResponse = await this.request<{
+        uploadData: {
+          url: string;
+          fields: Record<string, string>;
+          key: string;
+          bucket: string;
+        };
+      }>(`/upload/${folder}/presigned-url`, {
+        method: 'POST',
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size
+        })
+      });
 
-    const response = await fetch(`${this.baseURL}/upload/${folder}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.token}`,
-      },
-      body: formData,
-    });
+      const { uploadData } = presignedResponse;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-      throw new Error(errorData.error || 'Upload failed');
+      // Step 2: Upload directly to S3 using presigned POST
+      const formData = new FormData();
+      
+      // Add all the fields from presigned POST (order matters)
+      Object.entries(uploadData.fields).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      
+      // Add the file last (required by S3)
+      formData.append('file', file);
+
+      const s3Response = await fetch(uploadData.url, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!s3Response.ok) {
+        const errorText = await s3Response.text();
+        console.error('S3 upload failed:', errorText);
+        throw new Error('Direct S3 upload failed');
+      }
+
+      // Return file information
+      return {
+        file: {
+          filename: uploadData.key.split('/').pop(),
+          location: `https://${uploadData.bucket}.s3.amazonaws.com/${uploadData.key}`,
+          key: uploadData.key,
+          size: file.size,
+          mimetype: file.type
+        }
+      };
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw error;
     }
-
-    return await response.json();
   }
 
   async uploadMultipleFiles(files: File[], folder: string) {
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('files', file);
-    });
+    try {
+      // Step 1: Get presigned URLs for all files
+      const fileData = files.map(file => ({
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
+      }));
 
-    const response = await fetch(`${this.baseURL}/upload/${folder}/multiple`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.token}`,
-      },
-      body: formData,
-    });
+      const presignedResponse = await this.request<{
+        uploadDataArray: Array<{
+          fileName: string;
+          url: string;
+          fields: Record<string, string>;
+          key: string;
+          bucket: string;
+        }>;
+        errors?: string[];
+      }>(`/upload/${folder}/multiple/presigned-urls`, {
+        method: 'POST',
+        body: JSON.stringify({ files: fileData })
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-      throw new Error(errorData.error || 'Upload failed');
+      const { uploadDataArray, errors } = presignedResponse;
+
+      if (errors && errors.length > 0) {
+        console.warn('Some files had validation errors:', errors);
+      }
+
+      // Step 2: Upload each file directly to S3
+      const uploadPromises = uploadDataArray.map(async (uploadData, index) => {
+        const file = files.find(f => f.name === uploadData.fileName);
+        if (!file) {
+          throw new Error(`File not found: ${uploadData.fileName}`);
+        }
+
+        const formData = new FormData();
+        
+        // Add presigned POST fields
+        Object.entries(uploadData.fields).forEach(([key, value]) => {
+          formData.append(key, value);
+        });
+        
+        // Add the file last
+        formData.append('file', file);
+
+        const s3Response = await fetch(uploadData.url, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!s3Response.ok) {
+          const errorText = await s3Response.text();
+          console.error(`S3 upload failed for ${file.name}:`, errorText);
+          throw new Error(`Upload failed for ${file.name}`);
+        }
+
+        return {
+          filename: uploadData.key.split('/').pop(),
+          location: `https://${uploadData.bucket}.s3.amazonaws.com/${uploadData.key}`,
+          key: uploadData.key,
+          size: file.size,
+          mimetype: file.type
+        };
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
+
+      return {
+        files: uploadedFiles,
+        errors: errors
+      };
+    } catch (error) {
+      console.error('Multiple upload error:', error);
+      throw error;
     }
+  }
 
-    return await response.json();
+  // File download method
+  async getFileDownloadUrl(folder: string, key: string) {
+    return this.request<{
+      downloadUrl: string;
+      expiresIn: number;
+    }>(`/upload/${folder}/${key}/download`);
+  }
+
+  // File deletion method
+  async deleteFile(folder: string, key: string) {
+    return this.request<{
+      message: string;
+    }>(`/upload/${folder}/${key}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // Get file metadata
+  async getFileInfo(folder: string, key: string) {
+    return this.request<{
+      fileInfo: {
+        contentType: string;
+        contentLength: number;
+        lastModified: string;
+        etag: string;
+      };
+    }>(`/upload/${folder}/${key}/info`);
+  }
+
+  // Archive methods
+  async getArchives(filters?: {
+    category?: string;
+    type?: string;
+    search?: string;
+    decade?: string;
+  }) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+    }
+    
+    const queryString = params.toString();
+    return this.request<{
+      success: boolean;
+      data: any[];
+      count: number;
+    }>(`/archives${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getArchiveById(id: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/archives/${id}`);
+  }
+
+  async createArchive(archiveData: {
+    title: string;
+    description?: string;
+    category?: string;
+    tags?: string[];
+    date_taken?: string;
+    location?: string;
+    person_related?: string;
+    s3_key: string;
+    file_type: string;
+    file_size: number;
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>('/archives', {
+      method: 'POST',
+      body: JSON.stringify(archiveData)
+    });
+  }
+
+  async updateArchive(id: string, archiveData: any) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>(`/archives/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(archiveData)
+    });
+  }
+
+  async deleteArchive(id: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>(`/archives/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getArchiveStats() {
+    return this.request<{
+      success: boolean;
+      data: {
+        documents: number;
+        photos: number;
+        videos: number;
+        audio: number;
+        total: number;
+        years_covered: number;
+      };
+    }>('/archives/stats');
+  }
+
+  async getArchiveDownloadUrl(id: string) {
+    return this.request<{
+      success: boolean;
+      downloadUrl: string;
+      filename: string;
+      expiresIn: number;
+    }>(`/archives/${id}/download`);
+  }
+
+  async getUserArchives() {
+    return this.request<{
+      success: boolean;
+      data: any[];
+    }>('/archives/user/my-archives');
+  }
+
+  // Complete upload workflow for archives
+  async uploadAndCreateArchive(
+    file: File, 
+    archiveMetadata: {
+      title: string;
+      description?: string;
+      category?: string;
+      tags?: string[];
+      date_taken?: string;
+      location?: string;
+      person_related?: string;
+    }
+  ) {
+    try {
+      // Step 1: Upload file to S3
+      const uploadResult = await this.uploadFile(file, 'archives');
+      const s3Key = uploadResult.file.key;
+      
+      // Step 2: Create archive record with S3 metadata
+      const archiveResult = await this.createArchive({
+        ...archiveMetadata,
+        s3_key: s3Key,
+        file_type: file.type,
+        file_size: file.size
+      });
+      
+      return {
+        success: true,
+        archive: archiveResult.data,
+        file: uploadResult.file
+      };
+    } catch (error) {
+      console.error('Complete upload workflow failed:', error);
+      throw error;
+    }
   }
 
   // Admin methods
