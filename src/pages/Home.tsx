@@ -1,14 +1,16 @@
+import { useState, useEffect } from 'react';
 import { ArrowRight, Users, Calendar, Image, FileText, BookOpen, TreePine, Newspaper, PenTool } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { apiClient } from '@/lib/api';
 
-const stats = [
-  { label: 'Family Members', value: '127', icon: Users },
-  { label: 'Years of History', value: '150+', icon: Calendar },
-  { label: 'Photos & Media', value: '2,847', icon: Image },
-  { label: 'Stories & Documents', value: '156', icon: FileText },
-];
+interface Stats {
+  familyMembers: number;
+  yearsOfHistory: string;
+  photosAndMedia: number;
+  storiesAndDocuments: number;
+}
 
 const quickLinks = [
   {
@@ -42,12 +44,43 @@ const quickLinks = [
 ];
 
 export default function Home() {
+  const [stats, setStats] = useState<Stats>({
+    familyMembers: 0,
+    yearsOfHistory: '150+',
+    photosAndMedia: 0,
+    storiesAndDocuments: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await apiClient.getPublicStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        // Keep default stats if fetch fails
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statsArray = [
+    { label: 'Family Members', value: isLoading ? '...' : stats.familyMembers.toString(), icon: Users },
+    { label: 'Years of History', value: stats.yearsOfHistory, icon: Calendar },
+    { label: 'Photos & Media', value: isLoading ? '...' : stats.photosAndMedia.toString(), icon: Image },
+    { label: 'Stories & Documents', value: isLoading ? '...' : stats.storiesAndDocuments.toString(), icon: FileText },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/20 to-transparent z-10"></div>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80')] bg-cover bg-center opacity-70"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-50 via-white to-yellow-50 opacity-70"></div>
 
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <div className="max-w-3xl">
@@ -80,7 +113,7 @@ export default function Home() {
       <section className="py-16 bg-secondary/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => {
+            {statsArray.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <div key={index} className="text-center">
@@ -138,53 +171,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Recent Activity */}
-      <section className="py-20 bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Recent Francis Legacy Updates</h2>
-            <p className="text-foreground/70">Stay connected with the latest additions to the Francis Legacy collection</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="bg-white border-primary/20 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-foreground text-lg">New Family Photos Added</CardTitle>
-                <CardDescription className="text-foreground/70">
-                  Recent family reunion photos from summer 2024
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground/50">2 days ago</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-primary/20 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-foreground text-lg">Story: Grandmother's Recipe Collection</CardTitle>
-                <CardDescription className="text-foreground/70">
-                  A heartwarming collection of traditional family recipes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground/50">1 week ago</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-primary/20 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-foreground text-lg">Family Tree Updated</CardTitle>
-                <CardDescription className="text-foreground/70">
-                  Added new branch with recently discovered relatives
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground/50">2 weeks ago</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

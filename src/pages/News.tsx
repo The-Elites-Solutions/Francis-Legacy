@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, User, Tag, Search, Filter, Loader2 } from 'lucide-react';
+import { Calendar, User, Tag, Search, Filter, Loader2, Newspaper } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -118,18 +118,18 @@ export default function News() {
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4">
             Family <span className="text-yellow-600">News</span>
           </h1>
-          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-foreground/70 max-w-3xl mx-auto px-2">
             Stay connected with the latest updates, celebrations, and milestones 
             from our family members around the world.
           </p>
         </div>
 
         {/* Search and Filter */}
-        <div className="mb-12 flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="mb-8 sm:mb-12 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
             <Input
@@ -159,12 +159,12 @@ export default function News() {
 
         {/* Featured News */}
         {featuredNews.length > 0 && (
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
-              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
-              Important Announcements
+          <div className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6 sm:mb-8 flex flex-wrap items-center">
+              <span className="gold-texture text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm mr-2 sm:mr-3 mb-2 sm:mb-0">Featured</span>
+              <span className="text-lg sm:text-2xl">Important Announcements</span>
             </h2>
-            <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {featuredNews.map((article) => {
                 const authorName = getAuthorName(article);
                 const category = getCategory(article.content);
@@ -172,11 +172,17 @@ export default function News() {
                 return (
                   <Card key={article.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 hover:shadow-lg">
                     <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img 
-                        src={article.featured_image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
-                        alt={article.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
+                      {article.featured_image_url ? (
+                        <img 
+                          src={article.featured_image_url} 
+                          alt={article.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center">
+                          <Newspaper className="w-16 h-16 text-yellow-600 opacity-50" />
+                        </div>
+                      )}
                     </div>
                     <CardHeader>
                       <div className="flex items-center justify-between mb-2">
@@ -212,8 +218,8 @@ export default function News() {
 
         {/* Regular News */}
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-8">Recent Updates</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6 sm:mb-8">Recent Updates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {regularNews.map((article) => {
               const authorName = getAuthorName(article);
               const category = getCategory(article.content);
@@ -221,11 +227,17 @@ export default function News() {
               return (
                 <Card key={article.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
                   <div className="aspect-video overflow-hidden rounded-t-lg">
-                    <img 
-                      src={article.featured_image_url || 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
-                      alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {article.featured_image_url ? (
+                      <img 
+                        src={article.featured_image_url} 
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center">
+                        <Newspaper className="w-12 h-12 text-yellow-600 opacity-50" />
+                      </div>
+                    )}
                   </div>
                   <CardHeader>
                     <div className="flex items-center justify-between mb-2">

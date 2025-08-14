@@ -119,18 +119,18 @@ export default function Blog() {
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4">
             Family <span className="text-yellow-600">Blog</span>
           </h1>
-          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-foreground/70 max-w-3xl mx-auto px-2">
             Personal stories, memories, and experiences shared by family members. 
             Each post adds another layer to our rich family narrative.
           </p>
         </div>
 
         {/* Search and Tags */}
-        <div className="mb-12 space-y-6">
+        <div className="mb-8 sm:mb-12 space-y-4 sm:space-y-6">
           <div className="flex justify-center">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
@@ -175,12 +175,12 @@ export default function Blog() {
 
         {/* Featured Posts */}
         {featuredPosts.length > 0 && (
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center">
-              <span className="gold-texture text-white px-3 py-1 rounded-md text-sm mr-3">Featured</span>
-              Stories Worth Reading
+          <div className="mb-12 sm:mb-16">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6 sm:mb-8 flex flex-wrap items-center">
+              <span className="gold-texture text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm mr-2 sm:mr-3 mb-2 sm:mb-0">Featured</span>
+              <span className="text-lg sm:text-2xl">Stories Worth Reading</span>
             </h2>
-            <div className="grid lg:grid-cols-1 gap-8">
+            <div className="grid lg:grid-cols-1 gap-6 sm:gap-8">
               {featuredPosts.map((post) => {
                 const postTags = extractTags(post.content);
                 const authorName = getAuthorName(post);
@@ -188,24 +188,30 @@ export default function Blog() {
                 
                 return (
                   <Card key={post.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 hover:shadow-lg transition-all duration-300">
-                    <div className="grid md:grid-cols-2 gap-0">
-                      <div className="aspect-video md:aspect-square overflow-hidden rounded-l-lg">
-                        <img 
-                          src={post.featured_image_url || 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
-                          alt={post.title}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                      <div className="aspect-video md:aspect-square overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-t-none">
+                        {post.featured_image_url ? (
+                          <img 
+                            src={post.featured_image_url} 
+                            alt={post.title}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center">
+                            <BookOpen className="w-16 h-16 text-yellow-600 opacity-50" />
+                          </div>
+                        )}
                       </div>
-                      <div className="p-6 flex flex-col justify-between">
+                      <div className="p-4 sm:p-6 flex flex-col justify-between">
                         <div>
-                          <div className="flex items-center space-x-2 mb-4">
+                          <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
                             {postTags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="border-primary/30 text-yellow-600">
+                              <Badge key={tag} variant="outline" className="border-primary/30 text-yellow-600 text-xs">
                                 {tag}
                               </Badge>
                             ))}
                           </div>
-                          <h3 className="text-2xl font-bold text-foreground mb-3">{post.title}</h3>
+                          <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2 sm:mb-3">{post.title}</h3>
                           <p className="text-foreground/80 mb-4">{post.excerpt}</p>
                         </div>
                         <div className="space-y-4">
@@ -249,8 +255,8 @@ export default function Blog() {
 
         {/* Regular Posts */}
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-8">Recent Stories</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6 sm:mb-8">Recent Stories</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {regularPosts.map((post) => {
               const postTags = extractTags(post.content);
               const authorName = getAuthorName(post);
@@ -259,11 +265,17 @@ export default function Blog() {
               return (
                 <Card key={post.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
                   <div className="aspect-video overflow-hidden rounded-t-lg">
-                    <img 
-                      src={post.featured_image_url || 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {post.featured_image_url ? (
+                      <img 
+                        src={post.featured_image_url} 
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center">
+                        <BookOpen className="w-12 h-12 text-yellow-600 opacity-50" />
+                      </div>
+                    )}
                   </div>
                   <CardHeader>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -313,14 +325,14 @@ export default function Blog() {
         </div>
 
         {/* Call to Action */}
-        <div className="mt-20 text-center">
+        <div className="mt-12 sm:mt-20 text-center">
           <Card className="bg-white shadow-md border-primary/30">
-            <CardContent className="py-12">
-              <div className="w-20 h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-10 h-10 text-white" />
+            <CardContent className="py-8 sm:py-12 px-4 sm:px-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full gold-texture flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">Share Your Story</h3>
-              <p className="text-foreground/70 mb-6 max-w-2xl mx-auto">
+              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">Share Your Story</h3>
+              <p className="text-sm sm:text-base text-foreground/70 mb-4 sm:mb-6 max-w-2xl mx-auto">
                 Do you have a family story, memory, or experience you'd like to share? 
                 Your contributions help preserve our family legacy for future generations.
               </p>

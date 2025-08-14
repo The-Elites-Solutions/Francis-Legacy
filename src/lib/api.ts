@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://16.171.168.132:3001/api';
+import { IMAGEKIT_CONFIG, ImageKitUploadResponse, ImageKitAuthParams } from './imagekit-config';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiClient {
   private baseURL: string;
@@ -148,58 +150,46 @@ class ApiClient {
     });
   }
 
-  // File upload methods using presigned URLs (recommended S3 pattern)
-  async uploadFile(file: File, folder: string) {
+  // ImageKit upload methods
+  async uploadFile(file: File, folder: string = 'archives') {
     try {
-      // Step 1: Get presigned URL from backend
-      const presignedResponse = await this.request<{
-        uploadData: {
-          url: string;
-          fields: Record<string, string>;
-          key: string;
-          bucket: string;
-        };
-      }>(`/upload/${folder}/presigned-url`, {
-        method: 'POST',
-        body: JSON.stringify({
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size
-        })
-      });
-
-      const { uploadData } = presignedResponse;
-
-      // Step 2: Upload directly to S3 using presigned POST
+      // Step 1: Get authentication parameters from backend
+      const authResponse = await this.request<ImageKitAuthParams>('/upload/auth');
+      
+      // Step 2: Upload directly to ImageKit
       const formData = new FormData();
-      
-      // Add all the fields from presigned POST (order matters)
-      Object.entries(uploadData.fields).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      
-      // Add the file last (required by S3)
       formData.append('file', file);
-
-      const s3Response = await fetch(uploadData.url, {
+      formData.append('publicKey', IMAGEKIT_CONFIG.publicKey);
+      formData.append('signature', authResponse.signature);
+      formData.append('expire', authResponse.expire.toString());
+      formData.append('token', authResponse.token);
+      formData.append('fileName', file.name);
+      formData.append('folder', `/${folder}`);
+      formData.append('useUniqueFileName', 'true');
+      
+      const response = await fetch(IMAGEKIT_CONFIG.uploadEndpoint, {
         method: 'POST',
         body: formData,
       });
 
-      if (!s3Response.ok) {
-        const errorText = await s3Response.text();
-        console.error('S3 upload failed:', errorText);
-        throw new Error('Direct S3 upload failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('ImageKit upload failed:', errorData);
+        throw new Error(errorData.message || 'ImageKit upload failed');
       }
 
-      // Return file information
+      const uploadResult: ImageKitUploadResponse = await response.json();
+
+      // Return file information in the expected format
       return {
         file: {
-          filename: uploadData.key.split('/').pop(),
-          location: `https://${uploadData.bucket}.s3.amazonaws.com/${uploadData.key}`,
-          key: uploadData.key,
-          size: file.size,
-          mimetype: file.type
+          filename: uploadResult.name,
+          location: uploadResult.url,
+          key: uploadResult.filePath,
+          fileId: uploadResult.fileId,
+          size: uploadResult.size,
+          mimetype: uploadResult.fileType,
+          thumbnailUrl: uploadResult.thumbnailUrl
         }
       };
     } catch (error) {
@@ -208,77 +198,26 @@ class ApiClient {
     }
   }
 
-  async uploadMultipleFiles(files: File[], folder: string) {
+  // Upload multiple files to ImageKit
+  async uploadMultipleFiles(files: File[], folder: string = 'archives') {
     try {
-      // Step 1: Get presigned URLs for all files
-      const fileData = files.map(file => ({
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size
-      }));
-
-      const presignedResponse = await this.request<{
-        uploadDataArray: Array<{
-          fileName: string;
-          url: string;
-          fields: Record<string, string>;
-          key: string;
-          bucket: string;
-        }>;
-        errors?: string[];
-      }>(`/upload/${folder}/multiple/presigned-urls`, {
-        method: 'POST',
-        body: JSON.stringify({ files: fileData })
-      });
-
-      const { uploadDataArray, errors } = presignedResponse;
-
-      if (errors && errors.length > 0) {
-        console.warn('Some files had validation errors:', errors);
-      }
-
-      // Step 2: Upload each file directly to S3
-      const uploadPromises = uploadDataArray.map(async (uploadData, index) => {
-        const file = files.find(f => f.name === uploadData.fileName);
-        if (!file) {
-          throw new Error(`File not found: ${uploadData.fileName}`);
+      const uploadPromises = files.map(file => this.uploadFile(file, folder));
+      const results = await Promise.allSettled(uploadPromises);
+      
+      const uploadedFiles = [];
+      const errors = [];
+      
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          uploadedFiles.push(result.value.file);
+        } else {
+          errors.push(`Upload failed for ${files[index].name}: ${result.reason}`);
         }
-
-        const formData = new FormData();
-        
-        // Add presigned POST fields
-        Object.entries(uploadData.fields).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-        
-        // Add the file last
-        formData.append('file', file);
-
-        const s3Response = await fetch(uploadData.url, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!s3Response.ok) {
-          const errorText = await s3Response.text();
-          console.error(`S3 upload failed for ${file.name}:`, errorText);
-          throw new Error(`Upload failed for ${file.name}`);
-        }
-
-        return {
-          filename: uploadData.key.split('/').pop(),
-          location: `https://${uploadData.bucket}.s3.amazonaws.com/${uploadData.key}`,
-          key: uploadData.key,
-          size: file.size,
-          mimetype: file.type
-        };
       });
-
-      const uploadedFiles = await Promise.all(uploadPromises);
-
+      
       return {
         files: uploadedFiles,
-        errors: errors
+        errors: errors.length > 0 ? errors : undefined
       };
     } catch (error) {
       console.error('Multiple upload error:', error);
@@ -286,33 +225,30 @@ class ApiClient {
     }
   }
 
-  // File download method
-  async getFileDownloadUrl(folder: string, key: string) {
-    return this.request<{
-      downloadUrl: string;
-      expiresIn: number;
-    }>(`/upload/${folder}/${key}/download`);
-  }
-
-  // File deletion method
-  async deleteFile(folder: string, key: string) {
+  // File deletion method for ImageKit
+  async deleteFile(fileId: string) {
     return this.request<{
       message: string;
-    }>(`/upload/${folder}/${key}`, {
+    }>(`/upload/file/${fileId}`, {
       method: 'DELETE'
     });
   }
 
-  // Get file metadata
-  async getFileInfo(folder: string, key: string) {
+  // Get ImageKit file metadata
+  async getFileInfo(fileId: string) {
     return this.request<{
-      fileInfo: {
-        contentType: string;
-        contentLength: number;
-        lastModified: string;
-        etag: string;
+      file: {
+        fileId: string;
+        name: string;
+        filePath: string;
+        url: string;
+        thumbnailUrl?: string;
+        size: number;
+        fileType: string;
+        createdAt: string;
+        updatedAt: string;
       };
-    }>(`/upload/${folder}/${key}/info`);
+    }>(`/upload/file/${fileId}`);
   }
 
   // Archive methods
@@ -352,7 +288,8 @@ class ApiClient {
     date_taken?: string;
     location?: string;
     person_related?: string;
-    s3_key: string;
+    imagekit_file_id: string;
+    file_url: string;
     file_type: string;
     file_size: number;
   }) {
@@ -430,14 +367,14 @@ class ApiClient {
     }
   ) {
     try {
-      // Step 1: Upload file to S3
+      // Step 1: Upload file to ImageKit
       const uploadResult = await this.uploadFile(file, 'archives');
-      const s3Key = uploadResult.file.key;
       
-      // Step 2: Create archive record with S3 metadata
+      // Step 2: Create archive record with ImageKit metadata
       const archiveResult = await this.createArchive({
         ...archiveMetadata,
-        s3_key: s3Key,
+        imagekit_file_id: uploadResult.file.fileId,
+        file_url: uploadResult.file.location,
         file_type: file.type,
         file_size: file.size
       });
@@ -574,6 +511,25 @@ class ApiClient {
 
   async getTimelineEventsByType(type: string) {
     return this.request<any[]>(`/timeline/type/${type}`);
+  }
+
+  // Public stats for homepage (no auth required)
+  async getPublicStats() {
+    return this.request<{
+      familyMembers: number;
+      yearsOfHistory: string;
+      photosAndMedia: number;
+      storiesAndDocuments: number;
+    }>('/stats');
+  }
+
+  // Public stats for family history page (no auth required)
+  async getFamilyHistoryStats() {
+    return this.request<{
+      yearsOfHistory: string;
+      generations: number;
+      locations: number;
+    }>('/family-history/stats');
   }
 }
 

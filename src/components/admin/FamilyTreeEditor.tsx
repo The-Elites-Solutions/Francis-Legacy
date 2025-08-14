@@ -30,6 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import MemberNode, { FamilyMember, MemberNodeData } from './MemberNode';
 import { edgeTypes } from './FamilyTreeEdges';
 import { ReactFlowFamilyTreeLayout } from './FamilyTreeLayout';
+import { IMAGEKIT_CONFIG } from '@/lib/imagekit-config';
 
 interface MemberFormData {
   firstName: string;
@@ -38,9 +39,11 @@ interface MemberFormData {
   gender: string;
   birthDate: string;
   deathDate: string;
-  birthPlace: string;
+  birthCountry: string;
+  birthCity: string;
   occupation: string;
   biography: string;
+  profilePhotoFile: File | null;
   profilePhotoUrl: string;
   fatherId: string;
   motherId: string;
@@ -58,6 +61,34 @@ interface PendingConnection {
   connection: Connection;
   isOpen: boolean;
 }
+
+// Countries list
+const COUNTRIES = [
+  'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+  'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Bolivia', 'Bosnia and Herzegovina', 'Brazil', 'Bulgaria',
+  'Cambodia', 'Cameroon', 'Canada', 'Chile', 'China', 'Colombia', 'Croatia', 'Cuba', 'Czech Republic',
+  'Denmark', 'Dominican Republic', 'Ecuador', 'Egypt', 'Estonia', 'Ethiopia', 'Finland', 'France',
+  'Georgia', 'Germany', 'Ghana', 'Greece', 'Guatemala', 'Haiti', 'Honduras', 'Hungary',
+  'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan',
+  'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 'Libya', 'Lithuania', 'Luxembourg',
+  'Madagascar', 'Malaysia', 'Mali', 'Malta', 'Mexico', 'Moldova', 'Mongolia', 'Morocco', 'Myanmar',
+  'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Nigeria', 'North Korea', 'Norway',
+  'Pakistan', 'Panama', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal',
+  'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Senegal', 'Serbia', 'Singapore', 'Slovakia', 'Slovenia', 
+  'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan', 'Sweden', 'Switzerland', 'Syria',
+  'Taiwan', 'Thailand', 'Tunisia', 'Turkey', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 
+  'Uruguay', 'Venezuela', 'Vietnam', 'Yemen', 'Zimbabwe'
+];
+
+// Common occupations
+const OCCUPATIONS = [
+  'Accountant', 'Actor', 'Architect', 'Artist', 'Baker', 'Banker', 'Barber', 'Businessman', 'Carpenter',
+  'Chef', 'Clerk', 'Construction Worker', 'Dentist', 'Designer', 'Doctor', 'Driver', 'Electrician', 'Engineer',
+  'Farmer', 'Firefighter', 'Fisherman', 'Government Official', 'Homemaker', 'Journalist', 'Judge', 'Lawyer',
+  'Manager', 'Mechanic', 'Military Officer', 'Musician', 'Nurse', 'Painter', 'Pastor', 'Pharmacist', 'Photographer',
+  'Pilot', 'Plumber', 'Police Officer', 'Politician', 'Professor', 'Real Estate Agent', 'Retired', 'Salesperson',
+  'Scientist', 'Secretary', 'Shop Owner', 'Student', 'Tailor', 'Teacher', 'Technician', 'Unemployed', 'Writer'
+];
 
 const nodeTypes = {
   memberNode: MemberNode,
@@ -97,14 +128,19 @@ const FamilyTreeEditor: React.FC = () => {
     gender: '',
     birthDate: '',
     deathDate: '',
-    birthPlace: '',
-    occupation: '',
+    birthCountry: 'none',
+    birthCity: '',
+    occupation: 'none',
     biography: '',
+    profilePhotoFile: null,
     profilePhotoUrl: '',
     fatherId: '',
     motherId: '',
     spouseId: ''
   });
+  
+  // Photo upload state
+  const [uploading, setUploading] = useState(false);
   
   const { toast } = useToast();
 
@@ -391,6 +427,15 @@ const FamilyTreeEditor: React.FC = () => {
   };
 
   const cleanFormData = (data: MemberFormData) => {
+    // Handle "none" values for country and occupation
+    const country = data.birthCountry === 'none' ? '' : data.birthCountry;
+    const occupation = data.occupation === 'none' ? '' : data.occupation;
+    
+    // Combine country and city into birthPlace
+    const birthPlace = country && data.birthCity 
+      ? `${data.birthCity}, ${country}`
+      : country || data.birthCity || '';
+      
     return {
       firstName: data.firstName,
       lastName: data.lastName,
@@ -398,8 +443,8 @@ const FamilyTreeEditor: React.FC = () => {
       gender: data.gender || undefined,
       birthDate: data.birthDate || undefined,
       deathDate: data.deathDate || undefined,
-      birthPlace: data.birthPlace || undefined,
-      occupation: data.occupation || undefined,
+      birthPlace: birthPlace || undefined,
+      occupation: occupation || undefined,
       biography: data.biography || undefined,
       profilePhotoUrl: data.profilePhotoUrl || undefined,
       fatherId: data.fatherId === 'none' ? null : data.fatherId || null,
@@ -408,9 +453,50 @@ const FamilyTreeEditor: React.FC = () => {
     };
   };
 
+  const uploadPhoto = async (file: File): Promise<string> => {
+    try {
+      setUploading(true);
+      const uploadedUrl = await apiClient.uploadFile(file, 'family-photos');
+      return uploadedUrl;
+    } catch (error) {
+      console.error('Photo upload failed:', error);
+      throw new Error('Failed to upload photo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = async (file: File | null) => {
+    if (!file) {
+      setFormData({ ...formData, profilePhotoFile: null, profilePhotoUrl: '' });
+      return;
+    }
+
+    try {
+      // Upload immediately when file is selected
+      const uploadedUrl = await uploadPhoto(file);
+      setFormData({ 
+        ...formData, 
+        profilePhotoFile: null, // Clear the file since it's now uploaded
+        profilePhotoUrl: uploadedUrl 
+      });
+      toast({
+        title: 'Success',
+        description: 'Photo uploaded successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to upload photo. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Photo is already uploaded when file was selected, just use the URL
       const cleanedData = cleanFormData(formData);
       
       if (editMode === 'edit' && selectedMember) {
@@ -451,9 +537,21 @@ const FamilyTreeEditor: React.FC = () => {
     }
   };
 
+  const parseBirthPlace = (birthPlace: string | null) => {
+    if (!birthPlace) return { country: '', city: '' };
+    const parts = birthPlace.split(',').map(part => part.trim());
+    if (parts.length >= 2) {
+      const country = parts[parts.length - 1];
+      const city = parts.slice(0, -1).join(', ');
+      return { country, city };
+    }
+    return { country: birthPlace, city: '' };
+  };
+
   const handleEdit = (member: FamilyMember) => {
     setSelectedMember(member);
     setEditMode('edit');
+    const { country, city } = parseBirthPlace(member.birth_place);
     setFormData({
       firstName: member.first_name,
       lastName: member.last_name,
@@ -461,9 +559,11 @@ const FamilyTreeEditor: React.FC = () => {
       gender: (member as any).gender || '',
       birthDate: formatDateForInput(member.birth_date),
       deathDate: formatDateForInput(member.death_date),
-      birthPlace: member.birth_place || '',
-      occupation: member.occupation || '',
+      birthCountry: country || 'none',
+      birthCity: city,
+      occupation: member.occupation || 'none',
       biography: member.biography || '',
+      profilePhotoFile: null,
       profilePhotoUrl: member.profile_photo_url || '',
       fatherId: member.father_id || 'none',
       motherId: member.mother_id || 'none',
@@ -506,9 +606,11 @@ const FamilyTreeEditor: React.FC = () => {
       gender: '',
       birthDate: '',
       deathDate: '',
-      birthPlace: '',
-      occupation: '',
+      birthCountry: 'none',
+      birthCity: '',
+      occupation: 'none',
       biography: '',
+      profilePhotoFile: null,
       profilePhotoUrl: '',
       fatherId: '',
       motherId: '',
@@ -745,34 +847,91 @@ const FamilyTreeEditor: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="birthPlace">Birth Place</Label>
-                <Input
-                  id="birthPlace"
-                  value={formData.birthPlace}
-                  onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
-                  placeholder="City, State/Province, Country"
-                />
+              {/* Birth Place - Country and City */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="birthCountry">Birth Country</Label>
+                  <Select value={formData.birthCountry} onValueChange={(value) => setFormData({ ...formData, birthCountry: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      <SelectItem value="none">No country selected</SelectItem>
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="birthCity">Birth City</Label>
+                  <Input
+                    id="birthCity"
+                    value={formData.birthCity}
+                    onChange={(e) => setFormData({ ...formData, birthCity: e.target.value })}
+                    placeholder="Enter city name"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="occupation">Occupation</Label>
-                <Input
-                  id="occupation"
-                  value={formData.occupation}
-                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                />
+                <Select value={formData.occupation} onValueChange={(value) => setFormData({ ...formData, occupation: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select occupation" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    <SelectItem value="none">No occupation selected</SelectItem>
+                    {OCCUPATIONS.map((occupation) => (
+                      <SelectItem key={occupation} value={occupation}>
+                        {occupation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
+              {/* Profile Photo Upload */}
               <div className="space-y-2">
-                <Label htmlFor="profilePhotoUrl">Profile Photo URL</Label>
-                <Input
-                  id="profilePhotoUrl"
-                  type="url"
-                  value={formData.profilePhotoUrl}
-                  onChange={(e) => setFormData({ ...formData, profilePhotoUrl: e.target.value })}
-                  placeholder="https://..."
-                />
+                <Label htmlFor="profilePhoto">Profile Photo</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="profilePhoto"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      handleFileSelect(file);
+                    }}
+                    disabled={uploading}
+                  />
+                  {uploading && (
+                    <p className="text-sm text-blue-600">Uploading photo...</p>
+                  )}
+                  {formData.profilePhotoUrl && (
+                    <div className="flex items-center space-x-2">
+                      <img 
+                        src={formData.profilePhotoUrl} 
+                        alt="Profile photo" 
+                        className="w-16 h-16 object-cover rounded-md border"
+                      />
+                      <div>
+                        <p className="text-sm text-gray-600">Photo uploaded</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, profilePhotoUrl: '' })}
+                          className="mt-1"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Biography */}

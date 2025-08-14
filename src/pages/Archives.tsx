@@ -217,18 +217,18 @@ export default function Archives() {
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4">
             Family <span className="text-yellow-600">Archives</span>
           </h1>
-          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-foreground/70 max-w-3xl mx-auto px-2">
             Our digital repository of family documents, photos, videos, and memorabilia. 
             Preserving precious memories and important records for future generations.
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-12 space-y-6">
+        <div className="mb-8 sm:mb-12 space-y-4 sm:space-y-6">
           <div className="flex justify-center">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
@@ -241,7 +241,7 @@ export default function Archives() {
             </div>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="bg-white border-primary/30 text-foreground shadow-sm">
                 <SelectValue placeholder="Category" />
@@ -304,7 +304,7 @@ export default function Archives() {
 
         {/* Archive Grid */}
         {!loading && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
             {archives.map((item) => {
               const TypeIcon = getTypeIcon(item.file_type);
               return (
@@ -413,7 +413,7 @@ export default function Archives() {
 
         {/* Archive Statistics */}
         {stats && (
-          <div className="grid md:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-12 sm:mb-16">
             <Card className="bg-white shadow-md border-primary/30 text-center">
               <CardContent className="pt-6">
                 <div className="w-16 h-16 rounded-full gold-texture flex items-center justify-center mx-auto mb-3">
@@ -458,7 +458,7 @@ export default function Archives() {
 
         {/* Upload Dialog */}
         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-md mx-2 sm:mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add to Archives</DialogTitle>
               <DialogDescription>
