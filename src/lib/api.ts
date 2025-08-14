@@ -1,6 +1,11 @@
-import { IMAGEKIT_CONFIG, ImageKitUploadResponse, ImageKitAuthParams } from './imagekit-config';
+import {
+  IMAGEKIT_CONFIG,
+  ImageKitUploadResponse,
+  ImageKitAuthParams,
+} from "./imagekit-config";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 class ApiClient {
   private baseURL: string;
@@ -8,7 +13,7 @@ class ApiClient {
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
-    this.token = localStorage.getItem('francis_legacy_token');
+    this.token = localStorage.getItem("francis_legacy_token");
   }
 
   private async request<T>(
@@ -18,12 +23,12 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
 
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     };
 
     if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+      headers["Authorization"] = `Bearer ${this.token}`;
     }
 
     const config: RequestInit = {
@@ -35,8 +40,12 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
       }
 
       return await response.json();
@@ -52,14 +61,14 @@ class ApiClient {
       token: string;
       user: any;
       message: string;
-    }>('/auth/login', {
-      method: 'POST',
+    }>("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
     this.token = response.token;
-    localStorage.setItem('francis_legacy_token', response.token);
-    localStorage.setItem('francis_legacy_user', JSON.stringify(response.user));
+    localStorage.setItem("francis_legacy_token", response.token);
+    localStorage.setItem("francis_legacy_user", JSON.stringify(response.user));
 
     return response;
   }
@@ -74,108 +83,130 @@ class ApiClient {
       token: string;
       user: any;
       message: string;
-    }>('/auth/register', {
-      method: 'POST',
+    }>("/auth/register", {
+      method: "POST",
       body: JSON.stringify(userData),
     });
 
     this.token = response.token;
-    localStorage.setItem('francis_legacy_token', response.token);
-    localStorage.setItem('francis_legacy_user', JSON.stringify(response.user));
+    localStorage.setItem("francis_legacy_token", response.token);
+    localStorage.setItem("francis_legacy_user", JSON.stringify(response.user));
 
     return response;
   }
 
   logout() {
     this.token = null;
-    localStorage.removeItem('francis_legacy_token');
-    localStorage.removeItem('francis_legacy_user');
+    localStorage.removeItem("francis_legacy_token");
+    localStorage.removeItem("francis_legacy_user");
   }
 
   // Family methods
   async getFamilyMembers() {
-    return this.request<any[]>('/family');
+    return this.request<any[]>("/family", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getFamilyMember(id: string) {
-    return this.request<any>(`/family/${id}`);
+    return this.request<any>(`/family/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async createFamilyMember(memberData: any) {
-    return this.request<any>('/family', {
-      method: 'POST',
+    return this.request<any>("/family", {
+      method: "POST",
       body: JSON.stringify(memberData),
     });
   }
 
   async updateFamilyMember(id: string, memberData: any) {
     return this.request<any>(`/family/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(memberData),
     });
   }
 
   async deleteFamilyMember(id: string) {
     return this.request<{ message: string }>(`/family/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   // Blog methods
   async getBlogPosts() {
-    return this.request<any[]>('/blog');
+    return this.request<any[]>("/blog", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getBlogPost(slug: string) {
-    return this.request<any>(`/blog/${slug}`);
+    return this.request<any>(`/blog/${slug}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async createBlogPost(postData: any) {
-    return this.request<any>('/blog', {
-      method: 'POST',
+    return this.request<any>("/blog", {
+      method: "POST",
       body: JSON.stringify(postData),
     });
   }
 
   async updateBlogPost(id: string, postData: any) {
     return this.request<any>(`/blog/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(postData),
     });
   }
 
   async deleteBlogPost(id: string) {
     return this.request<{ message: string }>(`/blog/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   // ImageKit upload methods
-  async uploadFile(file: File, folder: string = 'archives') {
+  async uploadFile(file: File, folder: string = "archives") {
     try {
       // Step 1: Get authentication parameters from backend
-      const authResponse = await this.request<ImageKitAuthParams>('/upload/auth');
-      
+      const authResponse = await this.request<ImageKitAuthParams>(
+        "/upload/auth"
+      );
+
       // Step 2: Upload directly to ImageKit
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('publicKey', IMAGEKIT_CONFIG.publicKey);
-      formData.append('signature', authResponse.signature);
-      formData.append('expire', authResponse.expire.toString());
-      formData.append('token', authResponse.token);
-      formData.append('fileName', file.name);
-      formData.append('folder', `/${folder}`);
-      formData.append('useUniqueFileName', 'true');
-      
+      formData.append("file", file);
+      formData.append("publicKey", IMAGEKIT_CONFIG.publicKey);
+      formData.append("signature", authResponse.signature);
+      formData.append("expire", authResponse.expire.toString());
+      formData.append("token", authResponse.token);
+      formData.append("fileName", file.name);
+      formData.append("folder", `/${folder}`);
+      formData.append("useUniqueFileName", "true");
+
       const response = await fetch(IMAGEKIT_CONFIG.uploadEndpoint, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('ImageKit upload failed:', errorData);
-        throw new Error(errorData.message || 'ImageKit upload failed');
+        console.error("ImageKit upload failed:", errorData);
+        throw new Error(errorData.message || "ImageKit upload failed");
       }
 
       const uploadResult: ImageKitUploadResponse = await response.json();
@@ -189,38 +220,40 @@ class ApiClient {
           fileId: uploadResult.fileId,
           size: uploadResult.size,
           mimetype: uploadResult.fileType,
-          thumbnailUrl: uploadResult.thumbnailUrl
-        }
+          thumbnailUrl: uploadResult.thumbnailUrl,
+        },
       };
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       throw error;
     }
   }
 
   // Upload multiple files to ImageKit
-  async uploadMultipleFiles(files: File[], folder: string = 'archives') {
+  async uploadMultipleFiles(files: File[], folder: string = "archives") {
     try {
-      const uploadPromises = files.map(file => this.uploadFile(file, folder));
+      const uploadPromises = files.map((file) => this.uploadFile(file, folder));
       const results = await Promise.allSettled(uploadPromises);
-      
+
       const uploadedFiles = [];
       const errors = [];
-      
+
       results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
+        if (result.status === "fulfilled") {
           uploadedFiles.push(result.value.file);
         } else {
-          errors.push(`Upload failed for ${files[index].name}: ${result.reason}`);
+          errors.push(
+            `Upload failed for ${files[index].name}: ${result.reason}`
+          );
         }
       });
-      
+
       return {
         files: uploadedFiles,
-        errors: errors.length > 0 ? errors : undefined
+        errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
-      console.error('Multiple upload error:', error);
+      console.error("Multiple upload error:", error);
       throw error;
     }
   }
@@ -230,7 +263,10 @@ class ApiClient {
     return this.request<{
       message: string;
     }>(`/upload/file/${fileId}`, {
-      method: 'DELETE'
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }
 
@@ -248,7 +284,12 @@ class ApiClient {
         createdAt: string;
         updatedAt: string;
       };
-    }>(`/upload/file/${fileId}`);
+    }>(`/upload/file/${fileId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   // Archive methods
@@ -264,20 +305,30 @@ class ApiClient {
         if (value) params.append(key, value);
       });
     }
-    
+
     const queryString = params.toString();
     return this.request<{
       success: boolean;
       data: any[];
       count: number;
-    }>(`/archives${queryString ? `?${queryString}` : ''}`);
+    }>(`/archives${queryString ? `?${queryString}` : ""}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getArchiveById(id: string) {
     return this.request<{
       success: boolean;
       data: any;
-    }>(`/archives/${id}`);
+    }>(`/archives/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async createArchive(archiveData: {
@@ -297,9 +348,12 @@ class ApiClient {
       success: boolean;
       message: string;
       data: any;
-    }>('/archives', {
-      method: 'POST',
-      body: JSON.stringify(archiveData)
+    }>("/archives", {
+      method: "POST",
+      body: JSON.stringify(archiveData),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }
 
@@ -309,8 +363,11 @@ class ApiClient {
       message: string;
       data: any;
     }>(`/archives/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(archiveData)
+      method: "PUT",
+      body: JSON.stringify(archiveData),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }
 
@@ -319,7 +376,10 @@ class ApiClient {
       success: boolean;
       message: string;
     }>(`/archives/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }
 
@@ -334,7 +394,12 @@ class ApiClient {
         total: number;
         years_covered: number;
       };
-    }>('/archives/stats');
+    }>("/archives/stats", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getArchiveDownloadUrl(id: string) {
@@ -343,19 +408,29 @@ class ApiClient {
       downloadUrl: string;
       filename: string;
       expiresIn: number;
-    }>(`/archives/${id}/download`);
+    }>(`/archives/${id}/download`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getUserArchives() {
     return this.request<{
       success: boolean;
       data: any[];
-    }>('/archives/user/my-archives');
+    }>("/archives/user/my-archives", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   // Complete upload workflow for archives
   async uploadAndCreateArchive(
-    file: File, 
+    file: File,
     archiveMetadata: {
       title: string;
       description?: string;
@@ -368,24 +443,24 @@ class ApiClient {
   ) {
     try {
       // Step 1: Upload file to ImageKit
-      const uploadResult = await this.uploadFile(file, 'archives');
-      
+      const uploadResult = await this.uploadFile(file, "archives");
+
       // Step 2: Create archive record with ImageKit metadata
       const archiveResult = await this.createArchive({
         ...archiveMetadata,
         imagekit_file_id: uploadResult.file.fileId,
         file_url: uploadResult.file.location,
         file_type: file.type,
-        file_size: file.size
+        file_size: file.size,
       });
-      
+
       return {
         success: true,
         archive: archiveResult.data,
-        file: uploadResult.file
+        file: uploadResult.file,
       };
     } catch (error) {
-      console.error('Complete upload workflow failed:', error);
+      console.error("Complete upload workflow failed:", error);
       throw error;
     }
   }
@@ -399,118 +474,175 @@ class ApiClient {
       publishedNews: number;
       approvedArchives: number;
       pendingSubmissions: number;
-    }>('/admin/dashboard/stats');
+    }>("/admin/dashboard/stats", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getUsers() {
-    return this.request<any[]>('/admin/users');
+    return this.request<any[]>("/admin/users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async createUser(userData: any) {
-    return this.request<any>('/admin/users', {
-      method: 'POST',
+    return this.request<any>("/admin/users", {
+      method: "POST",
       body: JSON.stringify(userData),
     });
   }
 
   async updateUser(id: string, userData: any) {
     return this.request<any>(`/admin/users/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(userData),
     });
   }
 
   async deleteUser(id: string) {
     return this.request<{ message: string }>(`/admin/users/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async resetUserPassword(id: string) {
     return this.request<any>(`/admin/users/${id}/reset-password`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async getSubmissions() {
-    return this.request<any[]>('/admin/submissions');
+    return this.request<any[]>("/admin/submissions", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
-  async reviewSubmission(id: string, status: 'approved' | 'rejected', reviewNotes?: string) {
+  async reviewSubmission(
+    id: string,
+    status: "approved" | "rejected",
+    reviewNotes?: string
+  ) {
     return this.request<any>(`/admin/submissions/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify({ status, reviewNotes }),
     });
   }
 
   async getAuditLog(page = 1, limit = 50) {
-    return this.request<any>(`/admin/audit-log?page=${page}&limit=${limit}`);
+    return this.request<any>(`/admin/audit-log?page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   // News methods
   async getNewsArticles() {
-    return this.request<any[]>('/news');
+    return this.request<any[]>("/news", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getNewsArticle(slug: string) {
-    return this.request<any>(`/news/${slug}`);
+    return this.request<any>(`/news/${slug}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async createNewsArticle(articleData: any) {
-    return this.request<any>('/news', {
-      method: 'POST',
+    return this.request<any>("/news", {
+      method: "POST",
       body: JSON.stringify(articleData),
     });
   }
 
   async updateNewsArticle(id: string, articleData: any) {
     return this.request<any>(`/news/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(articleData),
     });
   }
 
   async deleteNewsArticle(id: string) {
     return this.request<{ message: string }>(`/news/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   // Timeline methods
   async getTimelineEvents() {
-    return this.request<any[]>('/timeline');
+    return this.request<any[]>("/timeline", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async getTimelineEvent(id: string) {
-    return this.request<any>(`/timeline/${id}`);
+    return this.request<any>(`/timeline/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   async createTimelineEvent(eventData: any) {
-    return this.request<any>('/timeline', {
-      method: 'POST',
+    return this.request<any>("/timeline", {
+      method: "POST",
       body: JSON.stringify(eventData),
     });
   }
 
   async updateTimelineEvent(id: string, eventData: any) {
     return this.request<any>(`/timeline/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(eventData),
     });
   }
 
   async deleteTimelineEvent(id: string) {
     return this.request<{ message: string }>(`/timeline/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async getTimelineEventsByDateRange(startDate: string, endDate: string) {
-    return this.request<any[]>(`/timeline/range?startDate=${startDate}&endDate=${endDate}`);
+    return this.request<any[]>(
+      `/timeline/range?startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   }
 
   async getTimelineEventsByType(type: string) {
-    return this.request<any[]>(`/timeline/type/${type}`);
+    return this.request<any[]>(`/timeline/type/${type}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   // Public stats for homepage (no auth required)
@@ -520,7 +652,12 @@ class ApiClient {
       yearsOfHistory: string;
       photosAndMedia: number;
       storiesAndDocuments: number;
-    }>('/stats');
+    }>("/stats", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   // Public stats for family history page (no auth required)
@@ -529,7 +666,12 @@ class ApiClient {
       yearsOfHistory: string;
       generations: number;
       locations: number;
-    }>('/family-history/stats');
+    }>("/family-history/stats", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }
 
