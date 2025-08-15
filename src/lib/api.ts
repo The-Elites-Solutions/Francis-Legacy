@@ -1,11 +1,12 @@
+import { FamilyMember } from "@/components/admin/MemberNode";
 import {
   IMAGEKIT_CONFIG,
   ImageKitUploadResponse,
   ImageKitAuthParams,
 } from "./imagekit-config";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+// API base URL with the /api prefix added when needed
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 class ApiClient {
   private baseURL: string;
@@ -20,20 +21,35 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    // Ensure endpoint starts with /api
+    const apiEndpoint = endpoint.startsWith("/api")
+      ? endpoint
+      : `/api${endpoint}`;
+    const url = `${this.baseURL}${apiEndpoint}`;
 
     const headers: HeadersInit = {
-      "Content-Type": "application/json",
       ...options.headers,
     };
+
+    // Only add Content-Type for requests with body
+    if (options.body) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (this.token) {
       headers["Authorization"] = `Bearer ${this.token}`;
     }
 
+    // Configure caching for GET requests
+    const cacheConfig: RequestCache =
+      options.method === "GET" ? "default" : "no-store";
+
     const config: RequestInit = {
       ...options,
       headers,
+      cache: cacheConfig,
+      // Add credentials to ensure cookies are sent with the request
+      credentials: "include",
     };
 
     try {
@@ -50,7 +66,7 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error(`API request failed for ${endpoint}:`, error);
+      console.error(`API request failed for ${apiEndpoint}:`, error);
       throw error;
     }
   }
@@ -59,7 +75,13 @@ class ApiClient {
   async login(email: string, password: string) {
     const response = await this.request<{
       token: string;
-      user: any;
+      user: {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: "admin" | "member";
+      };
       message: string;
     }>("/auth/login", {
       method: "POST",
@@ -81,7 +103,13 @@ class ApiClient {
   }) {
     const response = await this.request<{
       token: string;
-      user: any;
+      user: {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: "admin" | "member";
+      };
       message: string;
     }>("/auth/register", {
       method: "POST",
@@ -103,32 +131,26 @@ class ApiClient {
 
   // Family methods
   async getFamilyMembers() {
-    return this.request<any[]>("/family", {
+    return this.request<FamilyMember[]>("/family", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getFamilyMember(id: string) {
-    return this.request<any>(`/family/${id}`, {
+    return this.request<FamilyMember>(`/family/${id}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
-  async createFamilyMember(memberData: any) {
-    return this.request<any>("/family", {
+  async createFamilyMember(memberData: FamilyMember) {
+    return this.request<FamilyMember>("/family", {
       method: "POST",
       body: JSON.stringify(memberData),
     });
   }
 
-  async updateFamilyMember(id: string, memberData: any) {
-    return this.request<any>(`/family/${id}`, {
+  async updateFamilyMember(id: string, memberData: FamilyMember) {
+    return this.request<FamilyMember>(`/family/${id}`, {
       method: "PUT",
       body: JSON.stringify(memberData),
     });
@@ -142,32 +164,67 @@ class ApiClient {
 
   // Blog methods
   async getBlogPosts() {
-    return this.request<any[]>("/blog", {
+    return this.request<
+      {
+        id: string;
+        title: string;
+        slug: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+      }[]
+    >("/blog", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getBlogPost(slug: string) {
-    return this.request<any>(`/blog/${slug}`, {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/blog/${slug}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
-  async createBlogPost(postData: any) {
-    return this.request<any>("/blog", {
+  async createBlogPost(postData: {
+    title: string;
+    slug: string;
+    content: string;
+  }) {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>("/blog", {
       method: "POST",
       body: JSON.stringify(postData),
     });
   }
 
-  async updateBlogPost(id: string, postData: any) {
-    return this.request<any>(`/blog/${id}`, {
+  async updateBlogPost(
+    id: string,
+    postData: {
+      title: string;
+      slug: string;
+      content: string;
+    }
+  ) {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/blog/${id}`, {
       method: "PUT",
       body: JSON.stringify(postData),
     });
@@ -264,9 +321,6 @@ class ApiClient {
       message: string;
     }>(`/upload/file/${fileId}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -286,9 +340,6 @@ class ApiClient {
       };
     }>(`/upload/file/${fileId}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -309,25 +360,31 @@ class ApiClient {
     const queryString = params.toString();
     return this.request<{
       success: boolean;
-      data: any[];
+      data: {
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        tags: string[];
+      }[];
       count: number;
     }>(`/archives${queryString ? `?${queryString}` : ""}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getArchiveById(id: string) {
     return this.request<{
       success: boolean;
-      data: any;
+      data: {
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        tags: string[];
+      };
     }>(`/archives/${id}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -347,7 +404,13 @@ class ApiClient {
     return this.request<{
       success: boolean;
       message: string;
-      data: any;
+      data: {
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        tags: string[];
+      };
     }>("/archives", {
       method: "POST",
       body: JSON.stringify(archiveData),
@@ -357,11 +420,32 @@ class ApiClient {
     });
   }
 
-  async updateArchive(id: string, archiveData: any) {
+  async updateArchive(
+    id: string,
+    archiveData: {
+      title: string;
+      description?: string;
+      category?: string;
+      tags?: string[];
+      date_taken?: string;
+      location?: string;
+      person_related?: string;
+      imagekit_file_id: string;
+      file_url: string;
+      file_type: string;
+      file_size: number;
+    }
+  ) {
     return this.request<{
       success: boolean;
       message: string;
-      data: any;
+      data: {
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        tags: string[];
+      };
     }>(`/archives/${id}`, {
       method: "PUT",
       body: JSON.stringify(archiveData),
@@ -377,9 +461,6 @@ class ApiClient {
       message: string;
     }>(`/archives/${id}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -396,9 +477,6 @@ class ApiClient {
       };
     }>("/archives/stats", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -410,21 +488,21 @@ class ApiClient {
       expiresIn: number;
     }>(`/archives/${id}/download`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getUserArchives() {
     return this.request<{
       success: boolean;
-      data: any[];
+      data: {
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        tags: string[];
+      }[];
     }>("/archives/user/my-archives", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -476,30 +554,56 @@ class ApiClient {
       pendingSubmissions: number;
     }>("/admin/dashboard/stats", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getUsers() {
-    return this.request<any[]>("/admin/users", {
+    return this.request<
+      {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: "admin" | "member";
+      }[]
+    >("/admin/users", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
-  async createUser(userData: any) {
-    return this.request<any>("/admin/users", {
+  async createUser(userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }) {
+    return this.request<{
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: "admin" | "member";
+    }>("/admin/users", {
       method: "POST",
       body: JSON.stringify(userData),
     });
   }
 
-  async updateUser(id: string, userData: any) {
-    return this.request<any>(`/admin/users/${id}`, {
+  async updateUser(
+    id: string,
+    userData: {
+      email: string;
+      firstName: string;
+      lastName: string;
+    }
+  ) {
+    return this.request<{
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: "admin" | "member";
+    }>(`/admin/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
     });
@@ -512,17 +616,24 @@ class ApiClient {
   }
 
   async resetUserPassword(id: string) {
-    return this.request<any>(`/admin/users/${id}/reset-password`, {
+    return this.request<{
+      message: string;
+    }>(`/admin/users/${id}/reset-password`, {
       method: "POST",
     });
   }
 
   async getSubmissions() {
-    return this.request<any[]>("/admin/submissions", {
+    return this.request<
+      {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: "admin" | "member";
+      }[]
+    >("/admin/submissions", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -531,49 +642,85 @@ class ApiClient {
     status: "approved" | "rejected",
     reviewNotes?: string
   ) {
-    return this.request<any>(`/admin/submissions/${id}`, {
+    return this.request<{
+      message: string;
+    }>(`/admin/submissions/${id}`, {
       method: "PUT",
       body: JSON.stringify({ status, reviewNotes }),
     });
   }
 
   async getAuditLog(page = 1, limit = 50) {
-    return this.request<any>(`/admin/audit-log?page=${page}&limit=${limit}`, {
+    return this.request<{
+      message: string;
+    }>(`/admin/audit-log?page=${page}&limit=${limit}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   // News methods
   async getNewsArticles() {
-    return this.request<any[]>("/news", {
+    return this.request<
+      {
+        id: string;
+        title: string;
+        slug: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+      }[]
+    >("/news", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getNewsArticle(slug: string) {
-    return this.request<any>(`/news/${slug}`, {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/news/${slug}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
-  async createNewsArticle(articleData: any) {
-    return this.request<any>("/news", {
+  async createNewsArticle(articleData: {
+    title: string;
+    slug: string;
+    content: string;
+  }) {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>("/news", {
       method: "POST",
       body: JSON.stringify(articleData),
     });
   }
 
-  async updateNewsArticle(id: string, articleData: any) {
-    return this.request<any>(`/news/${id}`, {
+  async updateNewsArticle(
+    id: string,
+    articleData: {
+      title: string;
+      slug: string;
+      content: string;
+    }
+  ) {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/news/${id}`, {
       method: "PUT",
       body: JSON.stringify(articleData),
     });
@@ -587,32 +734,67 @@ class ApiClient {
 
   // Timeline methods
   async getTimelineEvents() {
-    return this.request<any[]>("/timeline", {
+    return this.request<
+      {
+        id: string;
+        title: string;
+        slug: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+      }[]
+    >("/timeline", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
   async getTimelineEvent(id: string) {
-    return this.request<any>(`/timeline/${id}`, {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/timeline/${id}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
-  async createTimelineEvent(eventData: any) {
-    return this.request<any>("/timeline", {
+  async createTimelineEvent(eventData: {
+    title: string;
+    slug: string;
+    content: string;
+  }) {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>("/timeline", {
       method: "POST",
       body: JSON.stringify(eventData),
     });
   }
 
-  async updateTimelineEvent(id: string, eventData: any) {
-    return this.request<any>(`/timeline/${id}`, {
+  async updateTimelineEvent(
+    id: string,
+    eventData: {
+      title: string;
+      slug: string;
+      content: string;
+    }
+  ) {
+    return this.request<{
+      id: string;
+      title: string;
+      slug: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/timeline/${id}`, {
       method: "PUT",
       body: JSON.stringify(eventData),
     });
@@ -625,23 +807,32 @@ class ApiClient {
   }
 
   async getTimelineEventsByDateRange(startDate: string, endDate: string) {
-    return this.request<any[]>(
-      `/timeline/range?startDate=${startDate}&endDate=${endDate}`,
+    return this.request<
       {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+        id: string;
+        title: string;
+        slug: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+      }[]
+    >(`/timeline/range?startDate=${startDate}&endDate=${endDate}`, {
+      method: "GET",
+    });
   }
 
   async getTimelineEventsByType(type: string) {
-    return this.request<any[]>(`/timeline/type/${type}`, {
+    return this.request<
+      {
+        id: string;
+        title: string;
+        slug: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+      }[]
+    >(`/timeline/type/${type}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -654,9 +845,6 @@ class ApiClient {
       storiesAndDocuments: number;
     }>("/stats", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 
@@ -668,9 +856,6 @@ class ApiClient {
       locations: number;
     }>("/family-history/stats", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 }

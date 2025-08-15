@@ -1,12 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiClient } from '@/lib/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { apiClient } from "@/lib/api";
 
 interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'member';
+  role: "admin" | "member";
 }
 
 interface AuthContextType {
@@ -18,36 +24,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing user session on mount
-    const storedUser = localStorage.getItem('francis_legacy_user');
-    const token = localStorage.getItem('francis_legacy_token');
-    
+    const storedUser = localStorage.getItem("francis_legacy_user");
+    const token = localStorage.getItem("francis_legacy_token");
+
     if (storedUser && token) {
       try {
         const userData = JSON.parse(storedUser);
         setUser(userData);
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('francis_legacy_user');
-        localStorage.removeItem('francis_legacy_token');
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem("francis_legacy_user");
+        localStorage.removeItem("francis_legacy_token");
       }
     }
-    
+
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await apiClient.login(email, password);
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.login(email, password);
+    setUser(response.user as unknown as User);
   };
 
   const logout = () => {
@@ -65,7 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
