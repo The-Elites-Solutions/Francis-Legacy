@@ -353,9 +353,6 @@ class FamilyTreeLayout {
       }
       
       // Position each family group with generation-based spacing
-      const generationSpacing = this.getGenerationSpacing(node.generation);
-      const familyGroupSpacing = this.getFamilyGroupSpacing(node.generation);
-      
       familyGroupArray.forEach((siblings, groupIndex) => {
         if (groupIndex > 0) {
           childX += familyGroupSpacing; // Add generation-based family spacing
