@@ -50,7 +50,23 @@ const getChildrenIds = (memberId: string, allMembers: FamilyMember[]): string[] 
     .map(m => m.id);
 };
 
-// Family Tree Layout Algorithm
+// Array-Based Family Tree Layout System
+interface MemberPosition {
+  generation: number;
+  index: number;
+  x: number;
+  y: number;
+}
+
+interface RelationshipData {
+  memberId: string;
+  position: MemberPosition;
+  spousePosition?: MemberPosition;
+  parentPositions: MemberPosition[];
+  childrenPositions: MemberPosition[];
+}
+
+// Legacy TreeNode interface (will be phased out)
 interface TreeNode {
   member: FamilyMember;
   spouse?: FamilyMember;
@@ -67,15 +83,25 @@ class FamilyTreeLayout {
   private members: FamilyMember[];
   private memberMap: Map<string, FamilyMember>;
   private processedMembers: Set<string>;
+  
+  // Array-based layout constants
   private NODE_WIDTH = 150;
   private NODE_HEIGHT = 150;
+  private MEMBER_HORIZONTAL_SPACING = 300;  // Spacing between members in same generation
+  private GENERATION_VERTICAL_SPACING = 250; // Spacing between generations
+  private TOP_MARGIN = 100;
+  private LEFT_MARGIN = 100;
   
-  // Variable spacing for family grouping
-  private SIBLING_SPACING = 50;        // Base spacing between siblings (reduced from 80)
-  private FAMILY_GROUP_SPACING = 250;  // Space between different family groups
-  private COUSIN_SPACING = 150;        // Space between cousins
-  private GENERATION_SPACING = 200;    // Vertical spacing between generations
-  private SPOUSE_SPACING = 180;        // Space between spouses
+  // Array-based data structures
+  private generations: FamilyMember[][] = [];
+  private relationships: Map<string, RelationshipData> = new Map();
+  
+  // Legacy spacing (for backward compatibility)
+  private SIBLING_SPACING = 50;
+  private FAMILY_GROUP_SPACING = 250;
+  private COUSIN_SPACING = 150;
+  private GENERATION_SPACING = 200;
+  private SPOUSE_SPACING = 180;
   
   // Get dynamic spacing based on generation for pyramid effect
   private getGenerationSpacing(generation: number): number {
@@ -101,53 +127,575 @@ class FamilyTreeLayout {
     if (typeof window !== 'undefined') {
       const viewportWidth = window.innerWidth;
       if (viewportWidth < 768) {
-        // Mobile - much tighter spacing
+        // Mobile - tighter spacing
+        this.MEMBER_HORIZONTAL_SPACING = 200;
+        this.GENERATION_VERTICAL_SPACING = 200;
+        this.NODE_WIDTH = 120;
+        // Legacy compatibility
         this.SIBLING_SPACING = 30;
         this.FAMILY_GROUP_SPACING = 120;
         this.COUSIN_SPACING = 80;
         this.GENERATION_SPACING = 120;
-        this.NODE_WIDTH = 120;
       } else if (viewportWidth < 1024) {
         // Tablet - medium spacing
+        this.MEMBER_HORIZONTAL_SPACING = 250;
+        this.GENERATION_VERTICAL_SPACING = 220;
+        this.NODE_WIDTH = 140;
+        // Legacy compatibility
         this.SIBLING_SPACING = 40;
         this.FAMILY_GROUP_SPACING = 180;
         this.COUSIN_SPACING = 100;
         this.GENERATION_SPACING = 150;
-        this.NODE_WIDTH = 140;
       }
-      // Otherwise use default desktop spacing (50px)
+      // Otherwise use default desktop spacing
     }
   }
 
-  // Generate layout with automatic positioning
-  generateLayout(onNodeClick?: (memberId: string) => void, onViewMember?: (memberId: string) => void): { nodes: Node<FamilyTreeMemberNodeData>[]; edges: Edge[] } {
-    // Find the true root - oldest member without parents
-    const rootMember = this.findTreeRoot();
+  // NEW: Organize members into generation arrays
+  private organizeByGenerations(): void {
+    this.generations = [];
+    const visited = new Set<string>();
+    const memberGenerations = new Map<string, number>();
     
-    if (!rootMember) {
-      // Fallback to members without parents
-      const rootMembers = this.findRootMembers();
-      const trees = rootMembers.map(root => this.buildFamilyTree(root, 0));
-      this.calculatePositions(trees);
-      const nodes = this.createNodes(trees, onNodeClick, onViewMember);
-      const edges = this.createEdges();
-      return { nodes, edges };
+    // First pass: Calculate generation levels for all members
+    const calculating = new Set<string>(); // Track members currently being calculated to prevent cycles
+    
+    const calculateGeneration = (memberId: string): number => {
+      if (memberGenerations.has(memberId)) {
+        return memberGenerations.get(memberId)!;
+      }
+      
+      // Prevent infinite recursion - if we're already calculating this member, it's a cycle
+      if (calculating.has(memberId)) {
+        console.warn(`Circular reference detected for member ${memberId}. Treating as root.`);
+        memberGenerations.set(memberId, 0);
+        return 0;
+      }
+      
+      calculating.add(memberId);
+      
+      const member = this.memberMap.get(memberId);
+      if (!member) {
+        calculating.delete(memberId);
+        return 0;
+      }
+      
+      // Root members (no parents) are generation 0
+      if (!member.father_id && !member.mother_id) {
+        memberGenerations.set(memberId, 0);
+        calculating.delete(memberId);
+        return 0;
+      }
+      
+      // Generation is 1 + max parent generation
+      let maxParentGeneration = -1;
+      if (member.father_id) {
+        maxParentGeneration = Math.max(maxParentGeneration, calculateGeneration(member.father_id));
+      }
+      if (member.mother_id) {
+        maxParentGeneration = Math.max(maxParentGeneration, calculateGeneration(member.mother_id));
+      }
+      
+      const generation = maxParentGeneration + 1;
+      memberGenerations.set(memberId, generation);
+      calculating.delete(memberId);
+      return generation;
+    };
+    
+    // Calculate generations for all members
+    this.members.forEach(member => calculateGeneration(member.id));
+    
+    // Adjust spouse generations to place them together
+    this.members.forEach(member => {
+      if (member.spouse_id) {
+        const memberGeneration = memberGenerations.get(member.id) || 0;
+        const spouseGeneration = memberGenerations.get(member.spouse_id) || 0;
+        
+        if (memberGeneration !== spouseGeneration) {
+          console.warn(`Cross-generation spouse relationship: ${member.first_name} ${member.last_name} (gen ${memberGeneration}) married to spouse (gen ${spouseGeneration}). Adjusting spouse to same generation for layout.`);
+          
+          // Place spouse in the same generation as their partner
+          // Use the higher generation (more descendants) for both
+          const targetGeneration = Math.max(memberGeneration, spouseGeneration);
+          memberGenerations.set(member.id, targetGeneration);
+          memberGenerations.set(member.spouse_id, targetGeneration);
+        }
+      }
+    });
+    
+    // Find the main root ancestor (oldest person with no parents)
+    const rootCandidates = this.members.filter(member => 
+      memberGenerations.get(member.id) === 0
+    );
+    
+    let mainRoot: FamilyMember | null = null;
+    if (rootCandidates.length > 0) {
+      // Find the oldest by birth date
+      const withBirthDates = rootCandidates.filter(m => m.birth_date);
+      if (withBirthDates.length > 0) {
+        mainRoot = withBirthDates.reduce((oldest, current) => {
+          const oldestDate = new Date(oldest.birth_date!).getTime();
+          const currentDate = new Date(current.birth_date!).getTime();
+          return currentDate < oldestDate ? current : oldest;
+        });
+      } else {
+        mainRoot = rootCandidates[0];
+      }
     }
     
-    // Build tree starting from the root
-    const tree = this.buildFamilyTree(rootMember, 0);
+    // Second pass: Group members by generation with couple-aware organization
+    const generationMembers = new Map<number, FamilyMember[]>();
     
-    // Calculate positions with better initial spacing
-    this.calculateTreePosition(tree, 200, 50);
+    // First, collect all members by generation
+    this.members.forEach(member => {
+      const generation = memberGenerations.get(member.id) || 0;
+      if (!generationMembers.has(generation)) {
+        generationMembers.set(generation, []);
+      }
+      generationMembers.get(generation)!.push(member);
+    });
     
-    // Center the tree
-    this.centerTree([tree]);
+    // Process each generation to ensure couples are adjacent
+    generationMembers.forEach((members, genIndex) => {
+      // Ensure generation array exists
+      while (this.generations.length <= genIndex) {
+        this.generations.push([]);
+      }
+      
+      if (genIndex === 0) {
+        // Root generation: only main root and spouse
+        if (mainRoot && !visited.has(mainRoot.id)) {
+          this.generations[0].push(mainRoot);
+          visited.add(mainRoot.id);
+          
+          if (mainRoot.spouse_id) {
+            const spouse = this.memberMap.get(mainRoot.spouse_id);
+            if (spouse && !visited.has(spouse.id)) {
+              this.generations[0].push(spouse);
+              visited.add(spouse.id);
+            }
+          }
+        }
+      } else {
+        // For other generations: group couples together
+        this.addCouplesAndSingles(members, genIndex, visited);
+      }
+    });
     
-    // Generate React Flow nodes and edges
-    const nodes = this.createNodes([tree], onNodeClick, onViewMember);
-    const edges = this.createEdges();
+    // Note: Sorting is now handled within addCouplesAndSingles() to maintain spouse adjacency
+  }
+
+  // NEW: Helper method to add couples and singles to generation
+  private addCouplesAndSingles(members: FamilyMember[], genIndex: number, visited: Set<string>): void {
+    const couples: [FamilyMember, FamilyMember][] = [];
+    const singles: FamilyMember[] = [];
+    
+    // Identify couples and singles
+    members.forEach(member => {
+      if (!visited.has(member.id)) {
+        if (member.spouse_id) {
+          const spouse = this.memberMap.get(member.spouse_id);
+          if (spouse && !visited.has(spouse.id) && members.includes(spouse)) {
+            // Found a couple in the same generation - add them together
+            couples.push([member, spouse]);
+            visited.add(member.id);
+            visited.add(spouse.id);
+          } else {
+            // Spouse not in this generation or already processed - treat as single
+            singles.push(member);
+            visited.add(member.id);
+          }
+        } else {
+          // No spouse - single person
+          singles.push(member);
+          visited.add(member.id);
+        }
+      }
+    });
+    
+    // Sort couples by older spouse's birth date
+    couples.sort((coupleA, coupleB) => {
+      const [memberA1, memberA2] = coupleA;
+      const [memberB1, memberB2] = coupleB;
+      
+      // Find older spouse in each couple
+      const olderA = this.getOlderSpouse(memberA1, memberA2);
+      const olderB = this.getOlderSpouse(memberB1, memberB2);
+      
+      if (olderA.birth_date && olderB.birth_date) {
+        return new Date(olderA.birth_date).getTime() - new Date(olderB.birth_date).getTime();
+      }
+      return `${olderA.first_name} ${olderA.last_name}`.localeCompare(`${olderB.first_name} ${olderB.last_name}`);
+    });
+    
+    // Sort singles by birth date
+    singles.sort((a, b) => {
+      if (a.birth_date && b.birth_date) {
+        return new Date(a.birth_date).getTime() - new Date(b.birth_date).getTime();
+      }
+      return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+    });
+    
+    // Add couples first (each couple as adjacent members)
+    couples.forEach(([member1, member2]) => {
+      this.generations[genIndex].push(member1);
+      this.generations[genIndex].push(member2);
+    });
+    
+    // Then add singles
+    singles.forEach(member => {
+      this.generations[genIndex].push(member);
+    });
+  }
+
+  // Helper to determine older spouse
+  private getOlderSpouse(spouse1: FamilyMember, spouse2: FamilyMember): FamilyMember {
+    if (spouse1.birth_date && spouse2.birth_date) {
+      return new Date(spouse1.birth_date).getTime() <= new Date(spouse2.birth_date).getTime() ? spouse1 : spouse2;
+    }
+    if (spouse1.birth_date) return spouse1;
+    if (spouse2.birth_date) return spouse2;
+    return spouse1; // Default to first if no birth dates
+  }
+
+  // NEW: Build relationship map using array positions
+  private mapRelationships(): void {
+    this.relationships.clear();
+    
+    // Create position data for each member
+    this.generations.forEach((generation, genIndex) => {
+      generation.forEach((member, memberIndex) => {
+        const position: MemberPosition = {
+          generation: genIndex,
+          index: memberIndex,
+          x: 0, // Will be calculated later
+          y: 0  // Will be calculated later
+        };
+        
+        const relationshipData: RelationshipData = {
+          memberId: member.id,
+          position,
+          parentPositions: [],
+          childrenPositions: []
+        };
+        
+        // Find parent positions
+        if (member.father_id) {
+          const fatherPos = this.findMemberPosition(member.father_id);
+          if (fatherPos) relationshipData.parentPositions.push(fatherPos);
+        }
+        if (member.mother_id && member.mother_id !== member.father_id) {
+          const motherPos = this.findMemberPosition(member.mother_id);
+          if (motherPos) relationshipData.parentPositions.push(motherPos);
+        }
+        
+        // Find spouse position (only if they're in the same generation)
+        if (member.spouse_id) {
+          const spousePos = this.findMemberPosition(member.spouse_id);
+          if (spousePos && spousePos.generation === genIndex) {
+            relationshipData.spousePosition = spousePos;
+          }
+        }
+        
+        // Find children positions
+        this.members.forEach(otherMember => {
+          if (otherMember.father_id === member.id || otherMember.mother_id === member.id) {
+            const childPos = this.findMemberPosition(otherMember.id);
+            if (childPos) relationshipData.childrenPositions.push(childPos);
+          }
+        });
+        
+        this.relationships.set(member.id, relationshipData);
+      });
+    });
+  }
+
+  // Helper: Find member position in generations array
+  private findMemberPosition(memberId: string): MemberPosition | null {
+    for (let genIndex = 0; genIndex < this.generations.length; genIndex++) {
+      const generation = this.generations[genIndex];
+      for (let memberIndex = 0; memberIndex < generation.length; memberIndex++) {
+        if (generation[memberIndex].id === memberId) {
+          return {
+            generation: genIndex,
+            index: memberIndex,
+            x: 0, // Will be calculated later
+            y: 0  // Will be calculated later
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  // NEW: Calculate positions using simple fixed spacing
+  private calculateArrayPositions(): void {
+    const GENERATION_HEIGHT = 200; // Vertical distance between generations
+    const BASE_SPACING = 300; // Fixed horizontal spacing between family units
+    const COUPLE_SPACING = 300; // Spacing between spouses
+    
+    this.generations.forEach((generation, genIndex) => {
+      const totalMembers = generation.length;
+      
+      // Special handling for root generation (should only be 1-2 members: root + spouse)
+      if (genIndex === 0) {
+        if (totalMembers === 1) {
+          // Single root member at center
+          const relationshipData = this.relationships.get(generation[0].id);
+          if (relationshipData) {
+            relationshipData.position.x = 0;
+            relationshipData.position.y = 0;
+          }
+        } else if (totalMembers === 2) {
+          // Root couple: center them with couple spacing
+          const member1Data = this.relationships.get(generation[0].id);
+          const member2Data = this.relationships.get(generation[1].id);
+          
+          if (member1Data && member2Data) {
+            member1Data.position.x = -COUPLE_SPACING / 2;
+            member1Data.position.y = 0;
+            member2Data.position.x = COUPLE_SPACING / 2;
+            member2Data.position.y = 0;
+          }
+        }
+      } else {
+        // Fixed spacing for non-root generations with couple awareness
+        this.positionGenerationWithCouples(generation, genIndex, BASE_SPACING);
+      }
+    });
+  }
+
+  // NEW: Position generation members with couple awareness and fixed spacing
+  private positionGenerationWithCouples(generation: FamilyMember[], genIndex: number, familyUnitSpacing: number): void {
+    const COUPLE_SPACING = 300; // Internal spacing between spouses
+    const GENERATION_HEIGHT = 200;
+    
+    // Identify family units (couples and singles)
+    const familyUnits: (FamilyMember | [FamilyMember, FamilyMember])[] = [];
+    const processed = new Set<string>();
+    
+    generation.forEach(member => {
+      if (processed.has(member.id)) return;
+      
+      // Check if this member has a spouse in the same generation
+      if (member.spouse_id) {
+        const spouse = this.memberMap.get(member.spouse_id);
+        if (spouse && generation.includes(spouse) && !processed.has(spouse.id)) {
+          // This is a couple
+          familyUnits.push([member, spouse]);
+          processed.add(member.id);
+          processed.add(spouse.id);
+          return;
+        }
+      }
+      
+      // This is a single person
+      familyUnits.push(member);
+      processed.add(member.id);
+    });
+    
+    // Calculate total width needed
+    const totalFamilyUnits = familyUnits.length;
+    const totalWidth = Math.max(0, (totalFamilyUnits - 1) * familyUnitSpacing);
+    const startX = -totalWidth / 2;
+    
+    // Position each family unit
+    familyUnits.forEach((unit, unitIndex) => {
+      const unitCenterX = totalFamilyUnits === 1 ? 0 : startX + (unitIndex * familyUnitSpacing);
+      const y = genIndex * GENERATION_HEIGHT;
+      
+      if (Array.isArray(unit)) {
+        // Position couple
+        const [member1, member2] = unit;
+        const member1Data = this.relationships.get(member1.id);
+        const member2Data = this.relationships.get(member2.id);
+        
+        if (member1Data && member2Data) {
+          member1Data.position.x = unitCenterX - COUPLE_SPACING / 2;
+          member1Data.position.y = y;
+          member2Data.position.x = unitCenterX + COUPLE_SPACING / 2;
+          member2Data.position.y = y;
+        }
+      } else {
+        // Position single member
+        const relationshipData = this.relationships.get(unit.id);
+        if (relationshipData) {
+          relationshipData.position.x = unitCenterX;
+          relationshipData.position.y = y;
+        }
+      }
+    });
+  }
+
+  // Helper: Find member by position
+  private findMemberByPosition(position: MemberPosition): FamilyMember | null {
+    if (position.generation < this.generations.length && 
+        position.index < this.generations[position.generation].length) {
+      return this.generations[position.generation][position.index];
+    }
+    return null;
+  }
+
+  // Collision detection and overlap prevention
+  private validateAndFixOverlaps(): void {
+    const NODE_WIDTH = this.NODE_WIDTH;
+    const NODE_HEIGHT = this.NODE_HEIGHT;
+    const MIN_SPACING = this.MEMBER_HORIZONTAL_SPACING; // Use current responsive spacing
+    
+    const positions: { id: string; x: number; y: number }[] = [];
+    
+    // Collect all positions
+    this.relationships.forEach((data, memberId) => {
+      positions.push({
+        id: memberId,
+        x: data.position.x,
+        y: data.position.y
+      });
+    });
+    
+    // Check for overlaps and fix them
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const pos1 = positions[i];
+        const pos2 = positions[j];
+        
+        const dx = Math.abs(pos1.x - pos2.x);
+        const dy = Math.abs(pos1.y - pos2.y);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If nodes are too close, adjust position
+        if (distance < MIN_SPACING) {
+          console.warn(`Overlap detected between ${pos1.id} and ${pos2.id}. Distance: ${Math.round(distance)}px, Required: ${MIN_SPACING}px`);
+          
+          // Move the second node to maintain minimum spacing
+          const angle = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x);
+          const newX = pos1.x + Math.cos(angle) * MIN_SPACING;
+          const newY = pos1.y + Math.sin(angle) * MIN_SPACING;
+          
+          const relationshipData = this.relationships.get(pos2.id);
+          if (relationshipData) {
+            relationshipData.position.x = newX;
+            relationshipData.position.y = newY;
+          }
+          
+          // Update position in array for subsequent checks
+          pos2.x = newX;
+          pos2.y = newY;
+        }
+      }
+    }
+  }
+
+  // NEW: Generate layout using array-based system
+  generateLayout(onNodeClick?: (memberId: string) => void, onViewMember?: (memberId: string) => void): { nodes: Node<FamilyTreeMemberNodeData>[]; edges: Edge[] } {
+    // Step 1: Organize members into generation arrays
+    this.organizeByGenerations();
+    
+    // Step 2: Map all relationships using array positions
+    this.mapRelationships();
+    
+    // Step 3: Calculate x,y positions using simple formula
+    this.calculateArrayPositions();
+    
+    // Step 3.5: Validate and fix any overlapping nodes
+    this.validateAndFixOverlaps();
+    
+    // Step 4: Create React Flow nodes from array data
+    const nodes = this.createArrayBasedNodes(onNodeClick, onViewMember);
+    
+    // Step 5: Create edges from relationship data
+    const edges = this.createArrayBasedEdges();
     
     return { nodes, edges };
+  }
+
+  // NEW: Create nodes from array-based layout
+  private createArrayBasedNodes(onNodeClick?: (memberId: string) => void, onViewMember?: (memberId: string) => void): Node<FamilyTreeMemberNodeData>[] {
+    const nodes: Node<FamilyTreeMemberNodeData>[] = [];
+    
+    this.generations.forEach((generation, genIndex) => {
+      generation.forEach((member, memberIndex) => {
+        const relationshipData = this.relationships.get(member.id);
+        if (!relationshipData) return;
+        
+        const { x, y } = relationshipData.position;
+        
+        nodes.push({
+          id: member.id,
+          type: 'familyMember',
+          position: { x: x - this.NODE_WIDTH / 2, y },
+          data: {
+            member,
+            onNodeClick: onNodeClick || (() => {}),
+            onViewMember,
+            generation: genIndex
+          },
+          draggable: false,
+          connectable: false,
+          selectable: false,
+        });
+      });
+    });
+    
+    return nodes;
+  }
+
+  // NEW: Create edges from relationship array data
+  private createArrayBasedEdges(): Edge[] {
+    const edges: Edge[] = [];
+    const processedSpouseConnections = new Set<string>();
+    
+    this.relationships.forEach((relationshipData, memberId) => {
+      // Parent-child edges
+      relationshipData.parentPositions.forEach(parentPos => {
+        const parentMember = this.findMemberByPosition(parentPos);
+        if (parentMember) {
+          edges.push({
+            id: `parent-${parentMember.id}-${memberId}`,
+            source: parentMember.id,
+            target: memberId,
+            sourceHandle: 'bottom',
+            targetHandle: 'top',
+            type: 'parent-child',
+            animated: false,
+            markerEnd: {
+              type: 'arrowclosed',
+              color: '#3b82f6',
+            },
+          });
+        }
+      });
+      
+      // Spouse edges (only create once per couple)
+      if (relationshipData.spousePosition) {
+        const spouseMember = this.findMemberByPosition(relationshipData.spousePosition);
+        if (spouseMember && memberId < spouseMember.id) {
+          const connectionId = [memberId, spouseMember.id].sort().join('-');
+          if (!processedSpouseConnections.has(connectionId)) {
+            processedSpouseConnections.add(connectionId);
+            
+            edges.push({
+              id: `spouse-${memberId}-${spouseMember.id}`,
+              source: memberId,
+              target: spouseMember.id,
+              sourceHandle: 'right',
+              targetHandle: 'left',
+              type: 'spouse',
+              animated: false,
+            });
+          }
+        }
+      }
+    });
+    
+    return edges;
+  }
+
+  // NEW: Helper to find member by array position
+  private findMemberByPosition(position: MemberPosition): FamilyMember | null {
+    if (position.generation >= this.generations.length) return null;
+    if (position.index >= this.generations[position.generation].length) return null;
+    return this.generations[position.generation][position.index];
   }
 
   // Find the oldest member without parents as the tree root
@@ -440,7 +988,6 @@ class FamilyTreeLayout {
     
     trees.forEach(applyOffset);
     
-    console.log(`🏛️ Pyramid centered: Root at ${targetRootCenterX}, offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})`);
   }
 
   // Create React Flow nodes from tree structure
@@ -554,18 +1101,7 @@ class FamilyTreeLayout {
         });
       }
 
-      // Spouse relationships (only create once per couple)
-      if (member.spouse_id && member.id < member.spouse_id) {
-        edges.push({
-          id: `spouse-${member.id}-${member.spouse_id}`,
-          source: member.id,
-          target: member.spouse_id,
-          sourceHandle: 'right',
-          targetHandle: 'left',
-          type: 'spouse',
-          animated: false,
-        });
-      }
+      // Spouse relationships removed - spouses are positioned adjacently without connection lines
     });
 
     return edges;
@@ -935,7 +1471,7 @@ function FamilyTreePage() {
                     }}
                     minZoom={0.1}
                     maxZoom={2}
-                    defaultZoom={0.8}
+                    defaultViewport={{ zoom: 0.8, x: 0, y: 0 }}
                     panOnDrag={true}
                     zoomOnScroll={true}
                     zoomOnPinch={true}
@@ -976,7 +1512,7 @@ function FamilyTreePage() {
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">{countries || 0}</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">3+</div>
               <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Countries</div>
             </CardContent>
           </Card>

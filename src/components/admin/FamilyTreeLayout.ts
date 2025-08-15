@@ -27,6 +27,57 @@ export class ReactFlowFamilyTreeLayout {
   }
 
   /**
+   * Organize members by generation (for validation purposes)
+   */
+  organizeByGenerations(): void {
+    // This method exists for compatibility with generation validation
+    // The actual generation calculation is done as needed
+  }
+
+  /**
+   * Get the generation number for a specific member
+   */
+  getMemberGeneration(memberId: string): number {
+    const visited = new Set<string>();
+    const calculating = new Set<string>();
+    
+    const calculateGeneration = (id: string): number => {
+      if (calculating.has(id)) {
+        // Circular reference - treat as root
+        return 0;
+      }
+      
+      calculating.add(id);
+      
+      const member = this.memberMap.get(id);
+      if (!member) {
+        calculating.delete(id);
+        return 0;
+      }
+      
+      // Root members (no parents) are generation 0
+      if (!member.father_id && !member.mother_id) {
+        calculating.delete(id);
+        return 0;
+      }
+      
+      // Generation is 1 + max parent generation
+      let maxParentGeneration = -1;
+      if (member.father_id) {
+        maxParentGeneration = Math.max(maxParentGeneration, calculateGeneration(member.father_id));
+      }
+      if (member.mother_id) {
+        maxParentGeneration = Math.max(maxParentGeneration, calculateGeneration(member.mother_id));
+      }
+      
+      calculating.delete(id);
+      return maxParentGeneration + 1;
+    };
+    
+    return calculateGeneration(memberId);
+  }
+
+  /**
    * Generate React Flow nodes and edges from family member data
    */
   generateNodesAndEdges(

@@ -273,6 +273,22 @@ const FamilyTreeEditor: React.FC = () => {
       });
 
       if (relationshipType === 'Add a Spouse') {
+        // Validate that spouses are from the same generation
+        const layout = new ReactFlowFamilyTreeLayout(members);
+        layout.organizeByGenerations();
+        
+        const sourceGeneration = layout.getMemberGeneration(sourceNodeId);
+        const targetGeneration = layout.getMemberGeneration(targetNodeId);
+        
+        if (sourceGeneration !== targetGeneration) {
+          toast({
+            title: 'Invalid Relationship',
+            description: `Cannot create spouse relationship between different generations. ${sourceNode.first_name} is in generation ${sourceGeneration + 1} and ${targetNode.first_name} is in generation ${targetGeneration + 1}.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+
         // Create bidirectional spousal link
         const sourceData = getMemberData(sourceNode);
         const targetData = getMemberData(targetNode);
