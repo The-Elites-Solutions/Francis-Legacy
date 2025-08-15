@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, User, Heart, MapPin, Loader2 } from 'lucide-react';
+import { Search, User, Heart, MapPin, Loader2, Monitor, List, Navigation, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,12 @@ import ReactFlow, {
   Background,
   ReactFlowProvider,
   useNodesState,
-  useEdgesState
+  useEdgesState,
+  useReactFlow
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import FamilyTreeMemberNode, { FamilyMember, FamilyTreeMemberNodeData } from '@/components/FamilyTreeMemberNode';
+import { edgeTypesPublic as edgeTypes } from '@/components/FamilyTreeEdges';
 import '@/styles/FamilyTree.css';
 
 // Node types for React Flow
@@ -51,37 +53,118 @@ const getChildrenIds = (memberId: string, allMembers: FamilyMember[]): string[] 
 // Family Tree Layout Algorithm
 interface TreeNode {
   member: FamilyMember;
+  spouse?: FamilyMember;
   children: TreeNode[];
   generation: number;
   x: number;
   y: number;
   width: number;
+  parentIds?: { fatherId?: string; motherId?: string }; // Track parent IDs for sibling grouping
+  familyGroupId?: string; // Unique ID for family grouping
 }
 
 class FamilyTreeLayout {
   private members: FamilyMember[];
   private memberMap: Map<string, FamilyMember>;
-  private processedSpouses: Set<string>;
+  private processedMembers: Set<string>;
+  private NODE_WIDTH = 150;
+  private NODE_HEIGHT = 150;
+  
+  // Variable spacing for family grouping
+  private SIBLING_SPACING = 50;        // Base spacing between siblings (reduced from 80)
+  private FAMILY_GROUP_SPACING = 250;  // Space between different family groups
+  private COUSIN_SPACING = 150;        // Space between cousins
+  private GENERATION_SPACING = 200;    // Vertical spacing between generations
+  private SPOUSE_SPACING = 180;        // Space between spouses
+  
+  // Get dynamic spacing based on generation for pyramid effect
+  private getGenerationSpacing(generation: number): number {
+    // Increase spacing as we go down the tree (pyramid effect)
+    const baseSpacing = this.SIBLING_SPACING;
+    const increment = generation * 20; // Gradually increase spacing (reduced from 30)
+    return baseSpacing + increment;
+  }
+  
+  private getFamilyGroupSpacing(generation: number): number {
+    // Increase family group spacing as we go down
+    const baseSpacing = this.FAMILY_GROUP_SPACING;
+    const increment = generation * 50;
+    return baseSpacing + increment;
+  }
 
   constructor(members: FamilyMember[]) {
     this.members = members;
     this.memberMap = new Map(members.map(m => [m.id, m]));
-    this.processedSpouses = new Set();
+    this.processedMembers = new Set();
+    
+    // Adjust spacing based on viewport width (responsive)
+    if (typeof window !== 'undefined') {
+      const viewportWidth = window.innerWidth;
+      if (viewportWidth < 768) {
+        // Mobile - much tighter spacing
+        this.SIBLING_SPACING = 30;
+        this.FAMILY_GROUP_SPACING = 120;
+        this.COUSIN_SPACING = 80;
+        this.GENERATION_SPACING = 120;
+        this.NODE_WIDTH = 120;
+      } else if (viewportWidth < 1024) {
+        // Tablet - medium spacing
+        this.SIBLING_SPACING = 40;
+        this.FAMILY_GROUP_SPACING = 180;
+        this.COUSIN_SPACING = 100;
+        this.GENERATION_SPACING = 150;
+        this.NODE_WIDTH = 140;
+      }
+      // Otherwise use default desktop spacing (50px)
+    }
   }
 
   // Generate layout with automatic positioning
-  generateLayout(): { nodes: Node<FamilyTreeMemberNodeData>[]; edges: Edge[] } {
-    const rootMembers = this.findRootMembers();
-    const trees = rootMembers.map(root => this.buildTree(root, 0));
+  generateLayout(onNodeClick?: (memberId: string) => void, onViewMember?: (memberId: string) => void): { nodes: Node<FamilyTreeMemberNodeData>[]; edges: Edge[] } {
+    // Find the true root - oldest member without parents
+    const rootMember = this.findTreeRoot();
     
-    // Calculate positions
-    this.calculatePositions(trees);
+    if (!rootMember) {
+      // Fallback to members without parents
+      const rootMembers = this.findRootMembers();
+      const trees = rootMembers.map(root => this.buildFamilyTree(root, 0));
+      this.calculatePositions(trees);
+      const nodes = this.createNodes(trees, onNodeClick, onViewMember);
+      const edges = this.createEdges();
+      return { nodes, edges };
+    }
+    
+    // Build tree starting from the root
+    const tree = this.buildFamilyTree(rootMember, 0);
+    
+    // Calculate positions with better initial spacing
+    this.calculateTreePosition(tree, 200, 50);
+    
+    // Center the tree
+    this.centerTree([tree]);
     
     // Generate React Flow nodes and edges
-    const nodes = this.createNodes(trees);
+    const nodes = this.createNodes([tree], onNodeClick, onViewMember);
     const edges = this.createEdges();
     
     return { nodes, edges };
+  }
+
+  // Find the oldest member without parents as the tree root
+  private findTreeRoot(): FamilyMember | null {
+    const rootCandidates = this.members.filter(member => !member.father_id && !member.mother_id);
+    
+    if (rootCandidates.length === 0) return null;
+    
+    // Find the oldest by birth date
+    const withBirthDates = rootCandidates.filter(m => m.birth_date);
+    if (withBirthDates.length === 0) return rootCandidates[0];
+    
+    return withBirthDates.reduce((oldest, current) => {
+      const oldestDate = new Date(oldest.birth_date!).getTime();
+      const currentDate = new Date(current.birth_date!).getTime();
+      return currentDate < oldestDate ? current : oldest;
+    });
   }
 
   // Find members with no parents (root of family trees)
@@ -89,135 +172,348 @@ class FamilyTreeLayout {
     return this.members.filter(member => !member.father_id && !member.mother_id);
   }
 
-  // Build hierarchical tree structure
-  private buildTree(member: FamilyMember, generation: number): TreeNode {
-    const children = this.getChildren(member.id);
-    const childTrees = children.map(child => this.buildTree(child, generation + 1));
+  // Build family tree with couples
+  private buildFamilyTree(member: FamilyMember, generation: number): TreeNode {
+    if (this.processedMembers.has(member.id)) {
+      // Return a simple node if already processed
+      return {
+        member,
+        spouse: undefined,
+        children: [],
+        generation,
+        x: 0,
+        y: 0,
+        width: this.NODE_WIDTH
+      };
+    }
+
+    this.processedMembers.add(member.id);
+    
+    // Find spouse
+    const spouse = member.spouse_id ? this.memberMap.get(member.spouse_id) : undefined;
+    if (spouse) {
+      this.processedMembers.add(spouse.id);
+    }
+
+    // Get children from this member (and their spouse if applicable)
+    const children = this.getChildrenOfCouple(member.id, spouse?.id);
+    
+    // Build child trees (avoid processing children that are already processed as main members)
+    const childTrees = children
+      .filter(child => !this.processedMembers.has(child.id))
+      .map(child => {
+        const childNode = this.buildFamilyTree(child, generation + 1);
+        // Set parent IDs for grouping
+        childNode.parentIds = {
+          fatherId: member.id,
+          motherId: spouse?.id
+        };
+        childNode.familyGroupId = `${member.id}-${spouse?.id || 'single'}`;
+        return childNode;
+      });
+
+    // Calculate node width (couple width includes spacing)
+    const nodeWidth = spouse ? (this.NODE_WIDTH + this.SPOUSE_SPACING) : this.NODE_WIDTH;
 
     return {
       member,
+      spouse,
       children: childTrees,
       generation,
       x: 0,
       y: 0,
-      width: 0
+      width: nodeWidth,
+      familyGroupId: `${member.id}-${spouse?.id || 'single'}`
     };
   }
 
-  // Get all children of a member
-  private getChildren(memberId: string): FamilyMember[] {
-    return this.members.filter(m => m.father_id === memberId || m.mother_id === memberId);
+  // Get all children of a couple
+  private getChildrenOfCouple(memberId: string, spouseId?: string): FamilyMember[] {
+    const children = this.members.filter(m => 
+      m.father_id === memberId || m.mother_id === memberId ||
+      (spouseId && (m.father_id === spouseId || m.mother_id === spouseId))
+    );
+    
+    // Remove duplicates
+    const uniqueChildren = children.filter((child, index, self) => 
+      index === self.findIndex(c => c.id === child.id)
+    );
+    
+    return uniqueChildren;
   }
 
-  // Calculate x,y positions for all nodes
+  // Calculate x,y positions for all nodes (fallback for multiple trees)
   private calculatePositions(trees: TreeNode[]): void {
-    const HORIZONTAL_SPACING = 160;
-    const VERTICAL_SPACING = 200;
-    const NODE_WIDTH = 120;
-
     // Calculate subtree widths
-    trees.forEach(tree => this.calculateSubtreeWidth(tree, NODE_WIDTH, HORIZONTAL_SPACING));
+    trees.forEach(tree => this.calculateSubtreeWidth(tree));
 
-    // Position trees horizontally
-    let currentX = 0;
+    // Position trees horizontally with proper spacing
+    let currentX = 200; // Start with larger margin
     trees.forEach(tree => {
-      this.positionTree(tree, currentX, 0, VERTICAL_SPACING);
-      currentX += tree.width + HORIZONTAL_SPACING * 2;
+      this.calculateTreePosition(tree, currentX, 50);
+      currentX += tree.width + this.HORIZONTAL_SPACING * 3; // Extra spacing between separate trees
     });
+    
+    // Center all trees
+    this.centerTree(trees);
   }
 
-  // Calculate the width of each subtree
-  private calculateSubtreeWidth(node: TreeNode, nodeWidth: number, spacing: number): number {
+  // Calculate the width of each subtree with family grouping
+  private calculateSubtreeWidth(node: TreeNode): number {
+    // Base width for this node (single or couple)
+    const nodeBaseWidth = node.spouse ? (this.NODE_WIDTH + this.SPOUSE_SPACING) : this.NODE_WIDTH;
+    
     if (node.children.length === 0) {
-      node.width = nodeWidth;
-    } else {
-      // Calculate total width of children
-      let childrenWidth = 0;
-      node.children.forEach(child => {
-        childrenWidth += this.calculateSubtreeWidth(child, nodeWidth, spacing);
-      });
-      
-      // Add spacing between children
-      if (node.children.length > 1) {
-        childrenWidth += (node.children.length - 1) * spacing;
-      }
-      
-      node.width = Math.max(nodeWidth, childrenWidth);
+      // Leaf node - return the base width
+      node.width = nodeBaseWidth;
+      return nodeBaseWidth;
     }
+    
+    // Group children by family for spacing calculation
+    const familyGroups = new Map<string, TreeNode[]>();
+    node.children.forEach(child => {
+      const groupId = child.familyGroupId || 'default';
+      if (!familyGroups.has(groupId)) {
+        familyGroups.set(groupId, []);
+      }
+      familyGroups.get(groupId)!.push(child);
+    });
+    
+    // Calculate total width with family-based spacing
+    let totalChildrenWidth = 0;
+    const familyGroupArray = Array.from(familyGroups.values());
+    
+    // Use generation-based spacing for width calculation
+    const generationSpacing = this.getGenerationSpacing(node.generation);
+    const familyGroupSpacing = this.getFamilyGroupSpacing(node.generation);
+    
+    familyGroupArray.forEach((siblings, groupIndex) => {
+      // Add width of each sibling
+      siblings.forEach((child, siblingIndex) => {
+        totalChildrenWidth += this.calculateSubtreeWidth(child);
+        // Add generation-based sibling spacing
+        if (siblingIndex > 0) {
+          totalChildrenWidth += generationSpacing;
+        }
+      });
+      // Add generation-based family group spacing
+      if (groupIndex > 0) {
+        totalChildrenWidth += familyGroupSpacing;
+      }
+    });
+    
+    // The subtree width is the maximum of node width and children width
+    node.width = Math.max(nodeBaseWidth, totalChildrenWidth);
     
     return node.width;
   }
 
-  // Position nodes in the tree
-  private positionTree(node: TreeNode, leftX: number, y: number, verticalSpacing: number): void {
+  // Position nodes in the tree hierarchically with family grouping
+  private calculateTreePosition(node: TreeNode, leftX: number, y: number): void {
     node.y = y;
 
     if (node.children.length === 0) {
-      // Leaf node - position at left edge
+      // Leaf node - center it in its allocated space
       node.x = leftX + node.width / 2;
     } else {
-      // Position children first
-      let childX = leftX;
+      // Group children by family
+      const familyGroups = new Map<string, TreeNode[]>();
       node.children.forEach(child => {
-        this.positionTree(child, childX, y + verticalSpacing, verticalSpacing);
-        childX += child.width + 160; // spacing between children
+        const groupId = child.familyGroupId || 'default';
+        if (!familyGroups.has(groupId)) {
+          familyGroups.set(groupId, []);
+        }
+        familyGroups.get(groupId)!.push(child);
       });
 
-      // Position parent centered above children
-      const firstChild = node.children[0];
-      const lastChild = node.children[node.children.length - 1];
-      node.x = (firstChild.x + lastChild.x) / 2;
+      // Position children with family-based spacing
+      let childX = leftX;
+      const familyGroupArray = Array.from(familyGroups.values());
+      
+      // Calculate total width needed for all children with generation-based spacing
+      let totalChildrenWidth = 0;
+      const generationSpacing = this.getGenerationSpacing(node.generation);
+      const familyGroupSpacing = this.getFamilyGroupSpacing(node.generation);
+      
+      familyGroupArray.forEach((siblings, groupIndex) => {
+        siblings.forEach((child, siblingIndex) => {
+          totalChildrenWidth += child.width;
+          if (siblingIndex > 0) {
+            totalChildrenWidth += generationSpacing; // Generation-based sibling spacing
+          }
+        });
+        if (groupIndex > 0) {
+          totalChildrenWidth += familyGroupSpacing; // Generation-based family spacing
+        }
+      });
+      
+      // Center children if they take less space than the parent
+      if (totalChildrenWidth < node.width) {
+        childX = leftX + (node.width - totalChildrenWidth) / 2;
+      }
+      
+      // Position each family group with generation-based spacing
+      const generationSpacing = this.getGenerationSpacing(node.generation);
+      const familyGroupSpacing = this.getFamilyGroupSpacing(node.generation);
+      
+      familyGroupArray.forEach((siblings, groupIndex) => {
+        if (groupIndex > 0) {
+          childX += familyGroupSpacing; // Add generation-based family spacing
+        }
+        
+        siblings.forEach((child, siblingIndex) => {
+          if (siblingIndex > 0) {
+            childX += generationSpacing; // Add generation-based sibling spacing
+          }
+          
+          this.calculateTreePosition(child, childX, node.y + this.NODE_HEIGHT + this.GENERATION_SPACING);
+          childX += child.width;
+        });
+      });
+
+      // Position parent centered above all their children
+      if (node.children.length === 1) {
+        node.x = node.children[0].x;
+      } else {
+        const firstChild = node.children[0];
+        const lastChild = node.children[node.children.length - 1];
+        node.x = (firstChild.x + lastChild.x) / 2;
+      }
     }
   }
 
+  // Center the entire tree in the viewport with pyramid layout
+  private centerTree(trees: TreeNode[]): void {
+    if (trees.length === 0) return;
+    
+    // For pyramid layout, center based on the root (first generation)
+    const rootNodes: TreeNode[] = [];
+    const allNodes: TreeNode[] = [];
+    
+    // Find root nodes and collect all nodes
+    const collectNodes = (node: TreeNode) => {
+      allNodes.push(node);
+      if (node.generation === 0) {
+        rootNodes.push(node);
+      }
+      node.children.forEach(collectNodes);
+    };
+    
+    trees.forEach(collectNodes);
+    
+    if (rootNodes.length === 0) return;
+    
+    // Calculate the center point of the root generation
+    let rootMinX = Infinity;
+    let rootMaxX = -Infinity;
+    
+    rootNodes.forEach(node => {
+      let nodeMinX, nodeMaxX;
+      
+      if (node.spouse) {
+        const coupleHalfWidth = (this.NODE_WIDTH + this.SPOUSE_SPACING / 2);
+        nodeMinX = node.x - coupleHalfWidth;
+        nodeMaxX = node.x + coupleHalfWidth;
+      } else {
+        nodeMinX = node.x - this.NODE_WIDTH / 2;
+        nodeMaxX = node.x + this.NODE_WIDTH / 2;
+      }
+      
+      rootMinX = Math.min(rootMinX, nodeMinX);
+      rootMaxX = Math.max(rootMaxX, nodeMaxX);
+    });
+    
+    const rootCenterX = (rootMinX + rootMaxX) / 2;
+    
+    // Define target center position for the root
+    const VIEWPORT_WIDTH = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const targetRootCenterX = VIEWPORT_WIDTH / 2;
+    const TOP_MARGIN = 100;
+    
+    // Calculate offset to center the root generation
+    const offsetX = targetRootCenterX - rootCenterX;
+    const offsetY = TOP_MARGIN - Math.min(...allNodes.map(n => n.y));
+    
+    // Apply offset to all nodes
+    const applyOffset = (node: TreeNode) => {
+      node.x += offsetX;
+      node.y += offsetY;
+      node.children.forEach(applyOffset);
+    };
+    
+    trees.forEach(applyOffset);
+    
+    console.log(`🏛️ Pyramid centered: Root at ${targetRootCenterX}, offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})`);
+  }
+
   // Create React Flow nodes from tree structure
-  private createNodes(trees: TreeNode[]): Node<FamilyTreeMemberNodeData>[] {
+  private createNodes(trees: TreeNode[], onNodeClick?: (memberId: string) => void, onViewMember?: (memberId: string) => void): Node<FamilyTreeMemberNodeData>[] {
     const nodes: Node<FamilyTreeMemberNodeData>[] = [];
     
-    const addNodeFromTree = (tree: TreeNode, onNodeClick: (memberId: string) => void) => {
-      // Add the main member node
-      nodes.push({
-        id: tree.member.id,
-        type: 'familyMember',
-        position: { x: tree.x, y: tree.y },
-        data: {
-          member: tree.member,
-          onNodeClick
-        },
-        draggable: false,
-        connectable: false,
-        selectable: false,
-      });
+    const addNodeFromTree = (tree: TreeNode) => {
+      // For single nodes, position at the center point
+      if (!tree.spouse) {
+        nodes.push({
+          id: tree.member.id,
+          type: 'familyMember',
+          position: { x: tree.x - this.NODE_WIDTH / 2, y: tree.y },
+          data: {
+            member: tree.member,
+            onNodeClick: onNodeClick || (() => {}),
+            onViewMember,
+            generation: tree.generation,
+            familyGroupId: tree.familyGroupId
+          },
+          draggable: false,
+          connectable: false,
+          selectable: false,
+        });
+      } else {
+        // For couples, position them side by side
+        // The tree.x represents the center of the couple unit
+        const leftX = tree.x - (this.SPOUSE_SPACING / 2) - (this.NODE_WIDTH / 2);
+        const rightX = tree.x + (this.SPOUSE_SPACING / 2) - (this.NODE_WIDTH / 2);
+        
+        // Add the main member node (usually on the left)
+        nodes.push({
+          id: tree.member.id,
+          type: 'familyMember',
+          position: { x: leftX, y: tree.y },
+          data: {
+            member: tree.member,
+            onNodeClick: onNodeClick || (() => {}),
+            onViewMember,
+            generation: tree.generation,
+            familyGroupId: tree.familyGroupId
+          },
+          draggable: false,
+          connectable: false,
+          selectable: false,
+        });
 
-      // Add spouse node if exists and not already processed
-      if (tree.member.spouse_id && !this.processedSpouses.has(tree.member.id)) {
-        const spouse = this.memberMap.get(tree.member.spouse_id);
-        if (spouse) {
-          this.processedSpouses.add(tree.member.id);
-          this.processedSpouses.add(spouse.id);
-          
-          nodes.push({
-            id: spouse.id,
-            type: 'familyMember',
-            position: { x: tree.x + 140, y: tree.y },
-            data: {
-              member: spouse,
-              onNodeClick
-            },
-            draggable: false,
-            connectable: false,
-            selectable: false,
-          });
-        }
+        // Add spouse node on the right
+        nodes.push({
+          id: tree.spouse.id,
+          type: 'familyMember',
+          position: { x: rightX, y: tree.y },
+          data: {
+            member: tree.spouse,
+            onNodeClick: onNodeClick || (() => {}),
+            onViewMember,
+            generation: tree.generation,
+            familyGroupId: tree.familyGroupId
+          },
+          draggable: false,
+          connectable: false,
+          selectable: false,
+        });
       }
 
       // Recursively add children
-      tree.children.forEach(child => addNodeFromTree(child, onNodeClick));
+      tree.children.forEach(child => addNodeFromTree(child));
     };
 
-    // We'll set the onNodeClick function later when we have access to it
-    const dummyOnNodeClick = () => {};
-    trees.forEach(tree => addNodeFromTree(tree, dummyOnNodeClick));
+    trees.forEach(tree => addNodeFromTree(tree));
     
     return nodes;
   }
@@ -228,14 +524,16 @@ class FamilyTreeLayout {
     const processedSpouseConnections = new Set<string>();
 
     this.members.forEach(member => {
-      // Parent-child edges
+      // Parent-child relationships
       if (member.father_id) {
         edges.push({
           id: `parent-${member.father_id}-${member.id}`,
           source: member.father_id,
           target: member.id,
-          type: 'smoothstep',
-          style: { stroke: '#3b82f6', strokeWidth: 2 },
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+          type: 'parent-child',
+          animated: false,
           markerEnd: {
             type: 'arrowclosed',
             color: '#3b82f6',
@@ -243,13 +541,15 @@ class FamilyTreeLayout {
         });
       }
 
-      if (member.mother_id) {
+      if (member.mother_id && member.mother_id !== member.father_id) {
         edges.push({
           id: `parent-${member.mother_id}-${member.id}`,
           source: member.mother_id,
           target: member.id,
-          type: 'smoothstep',
-          style: { stroke: '#3b82f6', strokeWidth: 2 },
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+          type: 'parent-child',
+          animated: false,
           markerEnd: {
             type: 'arrowclosed',
             color: '#3b82f6',
@@ -257,20 +557,17 @@ class FamilyTreeLayout {
         });
       }
 
-      // Spouse edges (bidirectional, so only create once)
-      if (member.spouse_id) {
-        const spouseConnectionId = [member.id, member.spouse_id].sort().join('-');
-        if (!processedSpouseConnections.has(spouseConnectionId)) {
-          processedSpouseConnections.add(spouseConnectionId);
-          
-          edges.push({
-            id: `spouse-${member.id}-${member.spouse_id}`,
-            source: member.id,
-            target: member.spouse_id,
-            type: 'straight',
-            style: { stroke: '#dc2626', strokeWidth: 3 },
-          });
-        }
+      // Spouse relationships (only create once per couple)
+      if (member.spouse_id && member.id < member.spouse_id) {
+        edges.push({
+          id: `spouse-${member.id}-${member.spouse_id}`,
+          source: member.id,
+          target: member.spouse_id,
+          sourceHandle: 'right',
+          targetHandle: 'left',
+          type: 'spouse',
+          animated: false,
+        });
       }
     });
 
@@ -289,6 +586,12 @@ function FamilyTreePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { fitView } = useReactFlow();
+
+  // Monitor section state
+  const [showMonitor, setShowMonitor] = useState(false);
+  const [monitorSearch, setMonitorSearch] = useState('');
+  const [selectedMonitorMember, setSelectedMonitorMember] = useState<string | null>(null);
 
   // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState<FamilyTreeMemberNodeData>([]);
@@ -333,6 +636,13 @@ function FamilyTreePage() {
     setClickedNode(memberId);
   }, []);
 
+  // Handle double click - directly show the modal
+  const handleNodeDoubleClick = useCallback((memberId: string) => {
+    setSelectedMember(memberId);
+    setIsModalOpen(true);
+    setClickedNode(null);
+  }, []);
+
   // Handle view button click - shows the modal
   const handleViewMember = useCallback((memberId: string) => {
     setSelectedMember(memberId);
@@ -347,30 +657,42 @@ function FamilyTreePage() {
     }
 
     const layout = new FamilyTreeLayout(familyMembers);
-    const { nodes: generatedNodes, edges: generatedEdges } = layout.generateLayout();
+    const { nodes: generatedNodes, edges: generatedEdges } = layout.generateLayout(handleNodeClick, handleViewMember);
     
-    // Update nodes with the actual handlers
-    const nodesWithHandlers = generatedNodes.map(node => ({
+    // Update nodes with the actual state
+    const nodesWithState = generatedNodes.map(node => ({
       ...node,
       data: {
         ...node.data,
-        onNodeClick: handleNodeClick,
-        onViewMember: handleViewMember,
-        isClicked: clickedNode === node.data.member.id
+        isClicked: clickedNode === node.data.member.id,
+        isMonitorHighlighted: selectedMonitorMember === node.data.member.id
       }
     }));
 
     return { 
-      layoutNodes: nodesWithHandlers, 
+      layoutNodes: nodesWithState, 
       layoutEdges: generatedEdges 
     };
-  }, [familyMembers, handleNodeClick, handleViewMember, clickedNode]);
+  }, [familyMembers, handleNodeClick, handleViewMember, clickedNode, selectedMonitorMember]);
 
   // Update React Flow nodes and edges when layout changes
   useEffect(() => {
     setNodes(layoutNodes);
     setEdges(layoutEdges);
-  }, [layoutNodes, layoutEdges, setNodes, setEdges]);
+    
+    // Ensure the tree is properly centered after a short delay to allow rendering
+    if (layoutNodes.length > 0) {
+      setTimeout(() => {
+        fitView({
+          padding: 0.15,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 2,
+          duration: 300,
+        });
+      }, 100);
+    }
+  }, [layoutNodes, layoutEdges, setNodes, setEdges, fitView]);
 
   const filteredMembers = familyMembers.filter(member => {
     const fullName = getMemberName(member).toLowerCase();
@@ -379,6 +701,36 @@ function FamilyTreePage() {
            (member.occupation && member.occupation.toLowerCase().includes(searchLower)) ||
            (member.birth_place && member.birth_place.toLowerCase().includes(searchLower));
   });
+
+  // Process members for monitor display
+  const monitorMembers = useMemo(() => {
+    const filtered = familyMembers.filter(member => {
+      const fullName = getMemberName(member).toLowerCase();
+      const searchLower = monitorSearch.toLowerCase();
+      return fullName.includes(searchLower) ||
+             (member.occupation && member.occupation.toLowerCase().includes(searchLower));
+    });
+
+    // Sort by generation (root first, then by name)
+    return filtered.sort((a, b) => {
+      // Root members (no parents) first
+      const aIsRoot = !a.father_id && !a.mother_id;
+      const bIsRoot = !b.father_id && !b.mother_id;
+      
+      if (aIsRoot && !bIsRoot) return -1;
+      if (!aIsRoot && bIsRoot) return 1;
+      
+      // Sort by birth year if available
+      if (a.birth_date && b.birth_date) {
+        const aYear = new Date(a.birth_date).getFullYear();
+        const bYear = new Date(b.birth_date).getFullYear();
+        if (aYear !== bYear) return aYear - bYear;
+      }
+      
+      // Finally sort by name
+      return getMemberName(a).localeCompare(getMemberName(b));
+    });
+  }, [familyMembers, monitorSearch]);
 
   const selectedMemberData = selectedMember ? familyMembers.find(m => m.id === selectedMember) : null;
 
@@ -391,6 +743,46 @@ function FamilyTreePage() {
   // Clear clicked node when clicking outside
   const handleBackgroundClick = useCallback(() => {
     setClickedNode(null);
+  }, []);
+
+  // Manual center tree function
+  const handleCenterTree = useCallback(() => {
+    fitView({
+      padding: 0.15,
+      includeHiddenNodes: false,
+      minZoom: 0.1,
+      maxZoom: 2,
+      duration: 500,
+    });
+  }, [fitView]);
+
+  // Navigate to specific member function
+  const navigateToMember = useCallback((memberId: string) => {
+    const targetNode = nodes.find(n => n.id === memberId);
+    if (targetNode) {
+      // Center on the specific node with smooth animation
+      fitView({
+        nodes: [targetNode],
+        duration: 800,
+        padding: 0.3,
+        includeHiddenNodes: false,
+        minZoom: 0.5,
+        maxZoom: 1.5,
+      });
+      
+      // Highlight the node temporarily
+      setSelectedMonitorMember(memberId);
+      setTimeout(() => setSelectedMonitorMember(null), 3000);
+      
+      // Also set as clicked node to show the view button
+      setClickedNode(memberId);
+      setTimeout(() => setClickedNode(null), 5000);
+    }
+  }, [nodes, fitView]);
+
+  // Toggle monitor visibility
+  const toggleMonitor = useCallback(() => {
+    setShowMonitor(prev => !prev);
   }, []);
 
   // Calculate family statistics dynamically
@@ -468,13 +860,13 @@ function FamilyTreePage() {
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-foreground/70 max-w-3xl mx-auto px-2 sm:px-0">
             Explore the connections that bind our family together across generations. 
-            {!isMobile && " Click on any family member to learn more about their story."}
-            {isMobile && " Tap family members to view their stories."}
+            {!isMobile && " Interactive nodes show relationships with colorful connection lines between family members."}
+            {isMobile && " Touch-friendly interface with clear relationship connections."}
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6 sm:mb-8 flex justify-center">
+        {/* Search Bar and Center Button */}
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-center items-center gap-4">
           <div className="relative w-full max-w-sm sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
             <Input
@@ -483,6 +875,27 @@ function FamilyTreePage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white border-primary/30 text-foreground placeholder-foreground/40 h-11 text-base touch-manipulation focus:border-primary"
             />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleCenterTree}
+              variant="outline"
+              className="h-11 px-4 border-primary/30 text-foreground hover:bg-yellow-50 hover:border-yellow-600 transition-colors"
+            >
+              🎯 Center Tree
+            </Button>
+            <Button
+              onClick={toggleMonitor}
+              variant={showMonitor ? "default" : "outline"}
+              className={`h-11 px-4 transition-colors ${
+                showMonitor 
+                  ? "bg-yellow-600 hover:bg-yellow-700 text-white" 
+                  : "border-primary/30 text-foreground hover:bg-yellow-50 hover:border-yellow-600"
+              }`}
+            >
+              <Monitor className="w-4 h-4 mr-2" />
+              Monitor
+            </Button>
           </div>
         </div>
       </div>
@@ -498,7 +911,7 @@ function FamilyTreePage() {
                   Interactive Family Tree
                 </CardTitle>
                 <CardDescription className="text-foreground/60 text-sm sm:text-base">
-                  {isMobile ? "Tap a member to select, then tap the view icon for details" : "Click on family members to select, then click the view icon to see their detailed profiles"}
+                  {isMobile ? "Tap to select • Double-tap for full details • Connections show family relationships" : "Click to select • Double-click for full details • Connection lines show family relationships"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
@@ -509,16 +922,27 @@ function FamilyTreePage() {
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onPaneClick={handleBackgroundClick}
+                    onNodeDoubleClick={(event, node) => handleNodeDoubleClick(node.id)}
                     nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
                     nodesDraggable={false}
                     nodesConnectable={false}
                     elementsSelectable={false}
                     deleteKeyCode={null}
                     fitView
                     fitViewOptions={{
-                      padding: 0.1,
+                      padding: 0.15,
                       includeHiddenNodes: false,
+                      minZoom: 0.1,
+                      maxZoom: 2,
                     }}
+                    minZoom={0.1}
+                    maxZoom={2}
+                    defaultZoom={0.8}
+                    panOnDrag={true}
+                    zoomOnScroll={true}
+                    zoomOnPinch={true}
+                    zoomOnDoubleClick={false}
                   >
                     <Background color="#f1f5f9" gap={20} />
                     <Controls />
@@ -568,6 +992,141 @@ function FamilyTreePage() {
           </Card>
         </div>
       </div>
+
+      {/* Family Tree Monitor Section */}
+      {showMonitor && (
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 mb-6 sm:mb-8">
+          <Card className="bg-white shadow-lg border-primary/30">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center justify-between text-lg sm:text-xl text-yellow-600">
+                <div className="flex items-center">
+                  <List className="w-5 h-5 mr-2" />
+                  Family Tree Monitor
+                  <span className="ml-2 text-sm text-foreground/60 font-normal">
+                    ({monitorMembers.length} members)
+                  </span>
+                </div>
+                <Button
+                  onClick={toggleMonitor}
+                  variant="ghost"
+                  size="sm"
+                  className="text-foreground/50 hover:text-foreground"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+              <CardDescription className="text-foreground/60">
+                Click on any member to navigate to their position in the family tree
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Monitor Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-4 h-4" />
+                <Input
+                  placeholder="Search family members..."
+                  value={monitorSearch}
+                  onChange={(e) => setMonitorSearch(e.target.value)}
+                  className="pl-10 bg-white border-primary/30 text-foreground placeholder-foreground/40"
+                />
+              </div>
+              
+              {/* Members List */}
+              <div className="max-h-80 overflow-y-auto space-y-2">
+                {monitorMembers.map((member) => {
+                  const isHighlighted = selectedMonitorMember === member.id;
+                  const isClicked = clickedNode === member.id;
+                  const spouseName = getSpouseName(member, familyMembers);
+                  const childrenCount = getChildrenIds(member.id, familyMembers).length;
+                  const birthYear = member.birth_date ? new Date(member.birth_date).getFullYear() : null;
+                  const isRoot = !member.father_id && !member.mother_id;
+                  
+                  return (
+                    <div
+                      key={member.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-md ${
+                        isHighlighted 
+                          ? 'bg-yellow-50 border-yellow-300 shadow-md' 
+                          : isClicked 
+                            ? 'bg-blue-50 border-blue-300'
+                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      }`}
+                      onClick={() => navigateToMember(member.id)}
+                    >
+                      <div className="flex items-center space-x-3 flex-1">
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarImage src={member.profile_photo_url} />
+                          <AvatarFallback className="text-xs bg-yellow-100 text-yellow-800">
+                            {member.first_name.charAt(0)}{member.last_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium text-foreground truncate">
+                              {getMemberName(member)}
+                            </span>
+                            {isRoot && (
+                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                                Root
+                              </span>
+                            )}
+                            {member.gender && (
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                member.gender === 'M' 
+                                  ? 'bg-blue-100 text-blue-800' 
+                                  : 'bg-pink-100 text-pink-800'
+                              }`}>
+                                {member.gender === 'M' ? '♂' : '♀'}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center space-x-3 text-xs text-foreground/60 mt-1">
+                            {birthYear && (
+                              <span>Born: {birthYear}</span>
+                            )}
+                            {spouseName && (
+                              <span className="flex items-center">
+                                <Heart className="w-3 h-3 mr-1 text-red-500" />
+                                {spouseName}
+                              </span>
+                            )}
+                            {childrenCount > 0 && (
+                              <span className="flex items-center">
+                                <User className="w-3 h-3 mr-1" />
+                                {childrenCount} children
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-shrink-0 text-foreground/50 hover:text-yellow-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToMember(member.id);
+                        }}
+                      >
+                        <Target className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+                
+                {monitorMembers.length === 0 && (
+                  <div className="text-center text-foreground/50 py-8">
+                    No family members found matching your search.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Member Details Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
