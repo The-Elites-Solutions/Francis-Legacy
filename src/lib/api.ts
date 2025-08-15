@@ -557,6 +557,139 @@ class ApiClient {
     });
   }
 
+  // Admin archive methods
+  async getAdminArchives(filters?: {
+    category?: string;
+    type?: string;
+    search?: string;
+    decade?: string;
+  }) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+    }
+
+    const queryString = params.toString();
+    return this.request<{
+      success: boolean;
+      data: any[];
+      count: number;
+    }>(`/admin/archives${queryString ? `?${queryString}` : ""}`, {
+      method: "GET",
+    });
+  }
+
+  async getAdminArchiveById(id: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/admin/archives/${id}`, {
+      method: "GET",
+    });
+  }
+
+  async createAdminArchive(archiveData: {
+    title: string;
+    description?: string;
+    category?: string;
+    tags?: string[];
+    date_taken?: string;
+    location?: string;
+    person_related?: string;
+    imagekit_file_id: string;
+    file_url: string;
+    file_type: string;
+    file_size: number;
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>("/admin/archives", {
+      method: "POST",
+      body: JSON.stringify(archiveData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async updateAdminArchive(
+    id: string,
+    archiveData: {
+      title: string;
+      description?: string;
+      category?: string;
+      tags?: string[];
+      date_taken?: string;
+      location?: string;
+      person_related?: string;
+      imagekit_file_id: string;
+      file_url: string;
+      file_type: string;
+      file_size: number;
+    }
+  ) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>(`/admin/archives/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(archiveData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async deleteAdminArchive(id: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+    }>(`/admin/archives/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async uploadAndCreateAdminArchive(
+    file: File,
+    archiveMetadata: {
+      title: string;
+      description?: string;
+      category?: string;
+      tags?: string[];
+      date_taken?: string;
+      location?: string;
+      person_related?: string;
+    }
+  ) {
+    try {
+      // Step 1: Upload file to ImageKit
+      const uploadResult = await this.uploadFile(file, "archives");
+
+      // Step 2: Create archive record with ImageKit metadata
+      const archiveResult = await this.createAdminArchive({
+        ...archiveMetadata,
+        imagekit_file_id: uploadResult.file.fileId,
+        file_url: uploadResult.file.location,
+        file_type: file.type,
+        file_size: file.size,
+      });
+
+      return {
+        success: true,
+        archive: archiveResult.data,
+        file: uploadResult.file,
+      };
+    } catch (error) {
+      console.error("Complete upload workflow failed:", error);
+      throw error;
+    }
+  }
+
   async getUsers() {
     return this.request<
       {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Eye, Calendar, MapPin, Heart } from 'lucide-react';
+import { Eye, Calendar, MapPin, Heart, User, Briefcase } from 'lucide-react';
 import { NodeProps, Handle, Position } from 'reactflow';
 
 export interface FamilyMember {
@@ -18,6 +18,7 @@ export interface FamilyMember {
   father_id?: string;
   mother_id?: string;
   spouse_id?: string;
+  gender?: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,9 +33,9 @@ export interface FamilyTreeMemberNodeData {
   familyGroupId?: string;
 }
 
-const FamilyTreeMemberNode: React.FC<NodeProps<FamilyTreeMemberNodeData>> = ({ data }) => {
+const FamilyTreeMemberNode: React.FC<NodeProps<FamilyTreeMemberNodeData>> = ({ data, selected }) => {
   const { member, onNodeClick, onViewMember, isClicked, isMonitorHighlighted, generation } = data;
-  const [isHovered, setIsHovered] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const getMemberName = () => `${member.first_name} ${member.last_name}`;
   
@@ -60,17 +61,6 @@ const FamilyTreeMemberNode: React.FC<NodeProps<FamilyTreeMemberNodeData>> = ({ d
     return '';
   };
 
-  const getGenerationColor = () => {
-    if (!generation) return 'border-gray-300';
-    switch (generation % 4) {
-      case 0: return 'border-red-400';
-      case 1: return 'border-blue-400';
-      case 2: return 'border-green-400';
-      case 3: return 'border-purple-400';
-      default: return 'border-gray-300';
-    }
-  };
-
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onNodeClick(member.id);
@@ -84,124 +74,158 @@ const FamilyTreeMemberNode: React.FC<NodeProps<FamilyTreeMemberNodeData>> = ({ d
   };
 
   return (
-    <div className="relative">
-      {/* Connection Handles */}
+    <div 
+      className="relative"
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
+      {/* Connection Handles with gold styling */}
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        style={{ background: '#3b82f6', width: 8, height: 8 }}
+        style={{ 
+          background: '#eab308', 
+          width: 10, 
+          height: 10,
+          border: '2px solid white',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}
+        className="!top-0 !transform !-translate-y-1/2"
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        style={{ background: '#3b82f6', width: 8, height: 8 }}
+        style={{ 
+          background: '#eab308', 
+          width: 10, 
+          height: 10,
+          border: '2px solid white',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}
+        className="!bottom-0 !transform !translate-y-1/2"
       />
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        style={{ background: '#dc2626', width: 8, height: 8 }}
+        style={{ 
+          background: '#f59e0b', 
+          width: 10, 
+          height: 10,
+          border: '2px solid white',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}
+        className="!right-0 !transform !translate-x-1/2"
       />
       <Handle
         type="target"
         position={Position.Left}
         id="left"
-        style={{ background: '#dc2626', width: 8, height: 8 }}
+        style={{ 
+          background: '#f59e0b', 
+          width: 10, 
+          height: 10,
+          border: '2px solid white',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}
+        className="!left-0 !transform !-translate-x-1/2"
       />
 
+      {/* Main Node Card with Gold Theme */}
       <div 
-        className={`family-tree-node cursor-pointer transition-all duration-200 ${getGenerationColor()} ${
-          isMonitorHighlighted 
-            ? 'ring-4 ring-yellow-400 ring-offset-2 shadow-xl animate-pulse scale-105' 
-            : isClicked 
-              ? 'ring-3 ring-yellow-500 ring-offset-2 shadow-lg' 
-              : 'hover:shadow-lg hover:scale-105'
-        }`}
+        className={`relative bg-white rounded-lg shadow-lg transition-all duration-300 cursor-pointer
+          border-2 border-yellow-600/30 hover:border-yellow-600/60
+          ${isMonitorHighlighted 
+            ? 'ring-4 ring-yellow-400 ring-offset-2 shadow-2xl scale-110' 
+            : selected 
+              ? 'ring-3 ring-yellow-500 ring-offset-2 shadow-xl scale-105' 
+              : isClicked
+                ? 'ring-2 ring-yellow-400 ring-offset-1 shadow-lg'
+                : 'hover:shadow-xl hover:scale-105'
+          }`}
+        style={{ 
+          width: 150, 
+          height: 150,
+          background: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)',
+          borderImage: 'linear-gradient(135deg, #eab308, #f59e0b, #eab308) 1'
+        }}
         onClick={handleClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        data-generation={generation}
       >
-        {/* Generation Indicator */}
-        {generation !== undefined && (
-          <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center text-xs font-bold text-gray-600 shadow-sm">
-            {generation + 1}
-          </div>
-        )}
+        {/* Gold accent strip at top */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 rounded-t-lg" />
+        
+        {/* Content Container */}
+        <div className="p-3 flex flex-col items-center justify-center h-full">
+          {/* Avatar with gold ring */}
+          <Avatar className="w-16 h-16 ring-2 ring-yellow-400/50 mb-2">
+            <AvatarImage 
+              src={member.profile_photo_url} 
+              alt={getMemberName()}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-gradient-to-br from-yellow-100 to-yellow-200 text-yellow-900 font-semibold">
+              {getInitials()}
+            </AvatarFallback>
+          </Avatar>
 
-        {/* Gender Indicator */}
+          {/* Name */}
+          <h3 className="text-xs font-semibold text-gray-800 text-center line-clamp-1">
+            {getMemberName()}
+          </h3>
+
+          {/* Lifespan */}
+          {getLifespan() && (
+            <p className="text-xs text-gray-600 mt-0.5">
+              {getLifespan()}
+            </p>
+          )}
+
+          {/* Occupation (if available and space permits) */}
+          {member.occupation && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-1 italic">
+              {member.occupation}
+            </p>
+          )}
+        </div>
+
+        {/* Gender Badge */}
         {member.gender && (
-          <div className={`absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs text-white ${
-            member.gender === 'M' ? 'bg-blue-500' : 'bg-pink-500'
-          }`}>
+          <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow-sm
+            ${member.gender === 'M' 
+              ? 'bg-blue-100 text-blue-600 border border-blue-300' 
+              : 'bg-pink-100 text-pink-600 border border-pink-300'
+            }`}>
             {member.gender === 'M' ? '♂' : '♀'}
           </div>
         )}
 
-        {/* Avatar */}
-        <div className="family-tree-node-avatar">
-          <Avatar className="w-full h-full">
-            <AvatarImage 
-              src={member.profile_photo_url} 
-              alt={getMemberName()}
-            />
-            <AvatarFallback className="family-tree-node-initials">
-              {getInitials()}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-        
-        {/* Name */}
-        <div className="family-tree-node-name">
-          {getMemberName()}
-        </div>
-
-        {/* Life span */}
-        {getLifespan() && (
-          <div className="text-xs text-gray-500 mt-1 flex items-center justify-center">
-            <Calendar className="w-3 h-3 mr-1" />
-            {getLifespan()}
+        {/* Generation Badge */}
+        {generation !== undefined && (
+          <div className="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 
+            border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-md">
+            G{generation + 1}
           </div>
         )}
 
-        {/* Occupation (on hover or click) */}
-        {(isHovered || isClicked) && member.occupation && (
-          <div className="text-xs text-gray-600 mt-1 text-center truncate px-2">
-            {member.occupation}
-          </div>
-        )}
-
-        {/* Birth place (on hover or click) */}
-        {(isHovered || isClicked) && member.birth_place && (
-          <div className="text-xs text-gray-500 mt-1 flex items-center justify-center truncate px-2">
-            <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
-            <span className="truncate">{member.birth_place}</span>
+        {/* View Action Button - shows on hover or when clicked */}
+        {(showActions || isClicked) && onViewMember && (
+          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-200">
+            <Button
+              size="sm"
+              variant="default"
+              onClick={handleViewClick}
+              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 
+                text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200
+                px-3 py-1 h-7 text-xs font-semibold"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              View Details
+            </Button>
           </div>
         )}
       </div>
-
-      {/* View Icon - appears when node is clicked */}
-      {isClicked && (
-        <div className="absolute -top-2 -right-2 z-10">
-          <Button
-            size="sm"
-            className="h-10 w-10 p-0 rounded-full bg-yellow-600 hover:bg-yellow-700 text-white shadow-xl transition-all duration-200 hover:scale-110 border-2 border-white"
-            onClick={handleViewClick}
-            title="View full member details"
-          >
-            <Eye className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
-
-      {/* Hover tooltip */}
-      {isHovered && !isClicked && (
-        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 translate-y-full bg-black text-white text-xs px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap">
-          Click to select • Double-click for details
-        </div>
-      )}
     </div>
   );
 };

@@ -167,25 +167,46 @@ export default function Archives() {
 
   const handleDownload = async (archive: ArchiveItem) => {
     try {
-      const response = await apiClient.getArchiveDownloadUrl(archive.id);
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.href = response.downloadUrl;
-      link.download = archive.title;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: 'Download Started',
-        description: `Downloading ${archive.title}`
-      });
+      // Since files are stored in ImageKit with public URLs, we can download directly
+      if (archive.file_url) {
+        // Create a temporary anchor element to trigger download
+        const link = document.createElement('a');
+        link.href = archive.file_url;
+        link.download = archive.title || 'download';
+        link.target = '_blank'; // Open in new tab as fallback
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: 'Download Started',
+          description: `Downloading ${archive.title}`
+        });
+      } else {
+        // Fallback to API if file_url is not available
+        try {
+          const response = await apiClient.getArchiveDownloadUrl(archive.id);
+          
+          const link = document.createElement('a');
+          link.href = response.downloadUrl;
+          link.download = archive.title;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast({
+            title: 'Download Started',
+            description: `Downloading ${archive.title}`
+          });
+        } catch (apiError) {
+          throw apiError;
+        }
+      }
     } catch (error) {
       console.error('Download error:', error);
       toast({
         title: 'Download Failed',
-        description: 'Failed to generate download link',
+        description: 'Failed to download file. Please try again.',
         variant: 'destructive'
       });
     }
@@ -386,7 +407,7 @@ export default function Archives() {
                             className="border-primary/30 text-yellow-600 hover:bg-primary/5"
                             onClick={() => handleDownload(item)}
                           >
-                            Save
+                            Download
                           </Button>
                         </div>
                       </div>
