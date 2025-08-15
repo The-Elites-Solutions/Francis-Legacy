@@ -262,24 +262,8 @@ class FamilyTreeLayout {
         this.generations.push([]);
       }
       
-      if (genIndex === 0) {
-        // Root generation: only main root and spouse
-        if (mainRoot && !visited.has(mainRoot.id)) {
-          this.generations[0].push(mainRoot);
-          visited.add(mainRoot.id);
-          
-          if (mainRoot.spouse_id) {
-            const spouse = this.memberMap.get(mainRoot.spouse_id);
-            if (spouse && !visited.has(spouse.id)) {
-              this.generations[0].push(spouse);
-              visited.add(spouse.id);
-            }
-          }
-        }
-      } else {
-        // For other generations: group couples together
-        this.addCouplesAndSingles(members, genIndex, visited);
-      }
+      // Treat all generations the same way - add couples and singles
+      this.addCouplesAndSingles(members, genIndex, visited);
     });
     
     // Note: Sorting is now handled within addCouplesAndSingles() to maintain spouse adjacency
@@ -428,102 +412,88 @@ class FamilyTreeLayout {
     return null;
   }
 
-  // NEW: Calculate positions using simple fixed spacing
+  // Simple linear array positioning
   private calculateArrayPositions(): void {
-    const GENERATION_HEIGHT = 200; // Vertical distance between generations
-    const BASE_SPACING = 300; // Fixed horizontal spacing between family units
-    const COUPLE_SPACING = 300; // Spacing between spouses
+    const HORIZONTAL_SPACING = 300; // Fixed spacing between all nodes
+    const VERTICAL_SPACING = 200; // Distance between generations
     
     this.generations.forEach((generation, genIndex) => {
-      const totalMembers = generation.length;
+      let currentX = 0;
+      const currentY = genIndex * VERTICAL_SPACING;
+      const processedMembers = new Set<string>();
       
-      // Special handling for root generation (should only be 1-2 members: root + spouse)
-      if (genIndex === 0) {
-        if (totalMembers === 1) {
-          // Single root member at center
-          const relationshipData = this.relationships.get(generation[0].id);
-          if (relationshipData) {
-            relationshipData.position.x = 0;
-            relationshipData.position.y = 0;
-          }
-        } else if (totalMembers === 2) {
-          // Root couple: center them with couple spacing
-          const member1Data = this.relationships.get(generation[0].id);
-          const member2Data = this.relationships.get(generation[1].id);
-          
-          if (member1Data && member2Data) {
-            member1Data.position.x = -COUPLE_SPACING / 2;
-            member1Data.position.y = 0;
-            member2Data.position.x = COUPLE_SPACING / 2;
-            member2Data.position.y = 0;
+      generation.forEach(member => {
+        // Skip if already processed (spouse handling)
+        if (processedMembers.has(member.id)) return;
+        
+        // Position current member
+        const relationshipData = this.relationships.get(member.id);
+        if (relationshipData) {
+          relationshipData.position.x = currentX;
+          relationshipData.position.y = currentY;
+          processedMembers.add(member.id);
+          currentX += HORIZONTAL_SPACING;
+        }
+        
+        // If member has spouse in this generation, position spouse next to them
+        if (member.spouse_id) {
+          const spouse = this.memberMap.get(member.spouse_id);
+          if (spouse && generation.includes(spouse) && !processedMembers.has(spouse.id)) {
+            const spouseData = this.relationships.get(spouse.id);
+            if (spouseData) {
+              spouseData.position.x = currentX;
+              spouseData.position.y = currentY;
+              processedMembers.add(spouse.id);
+              currentX += HORIZONTAL_SPACING;
+            }
           }
         }
-      } else {
-        // Fixed spacing for non-root generations with couple awareness
-        this.positionGenerationWithCouples(generation, genIndex, BASE_SPACING);
-      }
+      });
     });
   }
 
-  // NEW: Position generation members with couple awareness and fixed spacing
-  private positionGenerationWithCouples(generation: FamilyMember[], genIndex: number, familyUnitSpacing: number): void {
-    const COUPLE_SPACING = 300; // Internal spacing between spouses
-    const GENERATION_HEIGHT = 200;
+  // Calculate overall tree dimensions
+  private calculateTreeBounds(): { minX: number, maxX: number, minY: number, maxY: number, width: number, height: number } {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
     
-    // Identify family units (couples and singles)
-    const familyUnits: (FamilyMember | [FamilyMember, FamilyMember])[] = [];
-    const processed = new Set<string>();
-    
-    generation.forEach(member => {
-      if (processed.has(member.id)) return;
+    // Find min/max coordinates from all positioned nodes
+    this.relationships.forEach(relationshipData => {
+      const x = relationshipData.position.x;
+      const y = relationshipData.position.y;
       
-      // Check if this member has a spouse in the same generation
-      if (member.spouse_id) {
-        const spouse = this.memberMap.get(member.spouse_id);
-        if (spouse && generation.includes(spouse) && !processed.has(spouse.id)) {
-          // This is a couple
-          familyUnits.push([member, spouse]);
-          processed.add(member.id);
-          processed.add(spouse.id);
-          return;
-        }
-      }
-      
-      // This is a single person
-      familyUnits.push(member);
-      processed.add(member.id);
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
     });
     
-    // Calculate total width needed
-    const totalFamilyUnits = familyUnits.length;
-    const totalWidth = Math.max(0, (totalFamilyUnits - 1) * familyUnitSpacing);
-    const startX = -totalWidth / 2;
+    // If no nodes, return zero bounds
+    if (minX === Infinity) {
+      return { minX: 0, maxX: 0, minY: 0, maxY: 0, width: 0, height: 0 };
+    }
     
-    // Position each family unit
-    familyUnits.forEach((unit, unitIndex) => {
-      const unitCenterX = totalFamilyUnits === 1 ? 0 : startX + (unitIndex * familyUnitSpacing);
-      const y = genIndex * GENERATION_HEIGHT;
-      
-      if (Array.isArray(unit)) {
-        // Position couple
-        const [member1, member2] = unit;
-        const member1Data = this.relationships.get(member1.id);
-        const member2Data = this.relationships.get(member2.id);
-        
-        if (member1Data && member2Data) {
-          member1Data.position.x = unitCenterX - COUPLE_SPACING / 2;
-          member1Data.position.y = y;
-          member2Data.position.x = unitCenterX + COUPLE_SPACING / 2;
-          member2Data.position.y = y;
-        }
-      } else {
-        // Position single member
-        const relationshipData = this.relationships.get(unit.id);
-        if (relationshipData) {
-          relationshipData.position.x = unitCenterX;
-          relationshipData.position.y = y;
-        }
-      }
+    const width = maxX - minX;
+    const height = maxY - minY;
+    
+    return { minX, maxX, minY, maxY, width, height };
+  }
+
+  // Center the entire tree layout
+  private centerTreeLayout(): void {
+    const bounds = this.calculateTreeBounds();
+    
+    // Calculate offset to center the tree horizontally
+    // Keep vertical positioning from top (don't center vertically)
+    const offsetX = -bounds.width / 2 - bounds.minX;
+    const offsetY = -bounds.minY; // Start from Y=0
+    
+    // Apply offset to all nodes
+    this.relationships.forEach(relationshipData => {
+      relationshipData.position.x += offsetX;
+      relationshipData.position.y += offsetY;
     });
   }
 
@@ -536,55 +506,6 @@ class FamilyTreeLayout {
     return null;
   }
 
-  // Collision detection and overlap prevention
-  private validateAndFixOverlaps(): void {
-    const NODE_WIDTH = this.NODE_WIDTH;
-    const NODE_HEIGHT = this.NODE_HEIGHT;
-    const MIN_SPACING = this.MEMBER_HORIZONTAL_SPACING; // Use current responsive spacing
-    
-    const positions: { id: string; x: number; y: number }[] = [];
-    
-    // Collect all positions
-    this.relationships.forEach((data, memberId) => {
-      positions.push({
-        id: memberId,
-        x: data.position.x,
-        y: data.position.y
-      });
-    });
-    
-    // Check for overlaps and fix them
-    for (let i = 0; i < positions.length; i++) {
-      for (let j = i + 1; j < positions.length; j++) {
-        const pos1 = positions[i];
-        const pos2 = positions[j];
-        
-        const dx = Math.abs(pos1.x - pos2.x);
-        const dy = Math.abs(pos1.y - pos2.y);
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // If nodes are too close, adjust position
-        if (distance < MIN_SPACING) {
-          console.warn(`Overlap detected between ${pos1.id} and ${pos2.id}. Distance: ${Math.round(distance)}px, Required: ${MIN_SPACING}px`);
-          
-          // Move the second node to maintain minimum spacing
-          const angle = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x);
-          const newX = pos1.x + Math.cos(angle) * MIN_SPACING;
-          const newY = pos1.y + Math.sin(angle) * MIN_SPACING;
-          
-          const relationshipData = this.relationships.get(pos2.id);
-          if (relationshipData) {
-            relationshipData.position.x = newX;
-            relationshipData.position.y = newY;
-          }
-          
-          // Update position in array for subsequent checks
-          pos2.x = newX;
-          pos2.y = newY;
-        }
-      }
-    }
-  }
 
   // NEW: Generate layout using array-based system
   generateLayout(onNodeClick?: (memberId: string) => void, onViewMember?: (memberId: string) => void): { nodes: Node<FamilyTreeMemberNodeData>[]; edges: Edge[] } {
@@ -594,16 +515,16 @@ class FamilyTreeLayout {
     // Step 2: Map all relationships using array positions
     this.mapRelationships();
     
-    // Step 3: Calculate x,y positions using simple formula
+    // Step 3: Calculate x,y positions using simple linear formula
     this.calculateArrayPositions();
     
-    // Step 3.5: Validate and fix any overlapping nodes
-    this.validateAndFixOverlaps();
+    // Step 4: Center the entire tree layout
+    this.centerTreeLayout();
     
-    // Step 4: Create React Flow nodes from array data
+    // Step 5: Create React Flow nodes from array data
     const nodes = this.createArrayBasedNodes(onNodeClick, onViewMember);
     
-    // Step 5: Create edges from relationship data
+    // Step 6: Create edges from relationship data
     const edges = this.createArrayBasedEdges();
     
     return { nodes, edges };
