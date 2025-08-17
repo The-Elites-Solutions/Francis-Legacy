@@ -456,7 +456,7 @@ const FamilyTreeEditor: React.FC = () => {
       firstName: data.firstName,
       lastName: data.lastName,
       maidenName: data.maidenName || undefined,
-      gender: data.gender || undefined,
+      gender: data.gender === 'male' ? 'M' : data.gender === 'female' ? 'F' : undefined,
       birthDate: data.birthDate || undefined,
       deathDate: data.deathDate || undefined,
       birthPlace: birthPlace || undefined,

@@ -313,8 +313,8 @@ export class ReactFlowFamilyTreeLayout {
           id: `spouse-${member.id}-${member.spouse_id}`,
           source: member.id,
           target: member.spouse_id,
-          sourceHandle: 'spouse-right',
-          targetHandle: 'spouse-left',
+          sourceHandle: 'spouse-left',
+          targetHandle: 'spouse-right',
           type: 'spouse',
           animated: false,
         });
