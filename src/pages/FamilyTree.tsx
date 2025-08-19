@@ -212,9 +212,7 @@ class FamilyTreeLayout {
         const spouseGeneration = memberGenerations.get(member.spouse_id) || 0;
         
         if (memberGeneration !== spouseGeneration) {
-          console.warn(`Cross-generation spouse relationship: ${member.first_name} ${member.last_name} (gen ${memberGeneration}) married to spouse (gen ${spouseGeneration}). Adjusting spouse to same generation for layout.`);
-          
-          // Place spouse in the same generation as their partner
+          // Silently adjust spouse generations to place them together
           // Use the higher generation (more descendants) for both
           const targetGeneration = Math.max(memberGeneration, spouseGeneration);
           memberGenerations.set(member.id, targetGeneration);

@@ -36,10 +36,6 @@ class ApiClient {
       headers["Content-Type"] = "application/json";
     }
 
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
-    }
-
     // Configure caching for GET requests
     const cacheConfig: RequestCache =
       options.method === "GET" ? "default" : "no-store";
@@ -48,7 +44,7 @@ class ApiClient {
       ...options,
       headers,
       cache: cacheConfig,
-      // Add credentials to ensure cookies are sent with the request
+      // Always include credentials for session-based auth
       credentials: "include",
     };
 
@@ -72,61 +68,65 @@ class ApiClient {
   }
 
   // Auth methods
-  async login(email: string, password: string) {
+  async login(username: string, password: string) {
     const response = await this.request<{
-      token: string;
       user: {
         id: string;
-        email: string;
-        firstName: string;
-        lastName: string;
+        username: string;
+        first_name: string;
+        last_name: string;
         role: "admin" | "member";
+        userType: "admin" | "family_member";
+        mustChangePassword: boolean;
+        email?: string;
       };
       message: string;
     }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
-
-    this.token = response.token;
-    localStorage.setItem("francis_legacy_token", response.token);
-    localStorage.setItem("francis_legacy_user", JSON.stringify(response.user));
 
     return response;
   }
 
-  async register(userData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }) {
+  async logout() {
     const response = await this.request<{
-      token: string;
-      user: {
-        id: string;
-        email: string;
-        firstName: string;
-        lastName: string;
-        role: "admin" | "member";
-      };
       message: string;
-    }>("/auth/register", {
+    }>("/auth/logout", {
       method: "POST",
-      body: JSON.stringify(userData),
     });
 
-    this.token = response.token;
-    localStorage.setItem("francis_legacy_token", response.token);
-    localStorage.setItem("francis_legacy_user", JSON.stringify(response.user));
-
-    return response;
-  }
-
-  logout() {
     this.token = null;
     localStorage.removeItem("francis_legacy_token");
     localStorage.removeItem("francis_legacy_user");
+
+    return response;
+  }
+
+  async getCurrentUser() {
+    return this.request<{
+      user: {
+        id: string;
+        username: string;
+        first_name: string;
+        last_name: string;
+        role: "admin" | "member";
+        userType: "admin" | "family_member";
+        mustChangePassword: boolean;
+        email?: string;
+      };
+    }>("/auth/me", {
+      method: "GET",
+    });
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.request<{
+      message: string;
+    }>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
   }
 
   // Family methods
@@ -550,9 +550,33 @@ class ApiClient {
       familyTreeMembers: number;
       publishedBlogs: number;
       publishedNews: number;
-      approvedArchives: number;
+      publishedArchives: number;
       pendingSubmissions: number;
     }>("/admin/dashboard/stats", {
+      method: "GET",
+    });
+  }
+
+  async getStorageStats() {
+    return this.request<{
+      totalUsed: number;
+      totalQuota: number;
+      usagePercentage: number;
+      breakdown: {
+        images: number;
+        videos: number;
+        documents: number;
+        other: number;
+      };
+      fileCount: {
+        images: number;
+        videos: number;
+        documents: number;
+        other: number;
+      };
+      isNearCapacity: boolean;
+      isAtCapacity: boolean;
+    }>("/admin/storage-stats", {
       method: "GET",
     });
   }
@@ -695,9 +719,17 @@ class ApiClient {
       {
         id: string;
         email: string;
-        firstName: string;
-        lastName: string;
+        first_name: string;
+        last_name: string;
         role: "admin" | "member";
+        is_active: boolean;
+        email_verified: boolean;
+        phone?: string;
+        birth_date?: string;
+        profile_image_url?: string;
+        created_at: string;
+        last_login?: string;
+        created_by_name?: string;
       }[]
     >("/admin/users", {
       method: "GET",
@@ -728,6 +760,10 @@ class ApiClient {
       email: string;
       firstName: string;
       lastName: string;
+      phone?: string;
+      birthDate?: string;
+      isActive?: boolean;
+      role?: "admin" | "member";
     }
   ) {
     return this.request<{
@@ -736,6 +772,9 @@ class ApiClient {
       firstName: string;
       lastName: string;
       role: "admin" | "member";
+      is_active: boolean;
+      phone?: string;
+      birth_date?: string;
     }>(`/admin/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
@@ -751,10 +790,83 @@ class ApiClient {
   async resetUserPassword(id: string) {
     return this.request<{
       message: string;
+      emailSent?: boolean;
     }>(`/admin/users/${id}/reset-password`, {
       method: "POST",
     });
   }
+
+  // Family Member Management (unified authentication + tree)
+  async getFamilyMembersWithAuth() {
+    return this.request<{
+      id: string;
+      first_name: string;
+      last_name: string;
+      username: string;
+      email: string;
+      role: "member";
+      is_active: boolean;
+      password_changed: boolean;
+      created_at: string;
+      last_login?: string;
+      birth_date?: string;
+      phone?: string;
+      profile_photo_url?: string;
+      father_id?: string;
+      mother_id?: string;
+      spouse_id?: string;
+      has_password: boolean;
+      auth_status: string;
+    }[]>("/family/with-auth", {
+      method: "GET",
+    });
+  }
+
+  async resetFamilyMemberPassword(id: string) {
+    return this.request<{
+      message: string;
+      username: string;
+      newPassword: string;
+      mustChangePassword: boolean;
+    }>(`/family/${id}/reset-password`, {
+      method: "POST",
+    });
+  }
+
+  async updateOwnProfile(profileData: {
+    firstName?: string;
+    lastName?: string;
+    maidenName?: string;
+    gender?: string;
+    birthDate?: string;
+    birthPlace?: string;
+    occupation?: string;
+    biography?: string;
+    profilePhotoUrl?: string;
+  }) {
+    return this.request<{
+      message: string;
+      member: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        maiden_name?: string;
+        gender?: string;
+        birth_date?: string;
+        birth_place?: string;
+        occupation?: string;
+        biography?: string;
+        profile_photo_url?: string;
+        username: string;
+        created_at: string;
+        updated_at: string;
+      };
+    }>(`/family/profile`, {
+      method: "PUT",
+      body: JSON.stringify(profileData),
+    });
+  }
+
 
   async getSubmissions() {
     return this.request<
@@ -785,7 +897,23 @@ class ApiClient {
 
   async getAuditLog(page = 1, limit = 50) {
     return this.request<{
-      message: string;
+      logs: {
+        id: string;
+        action: string;
+        target_type: string;
+        target_id: string;
+        details: any;
+        ip_address: string;
+        created_at: string;
+        admin_first_name: string;
+        admin_last_name: string;
+      }[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
     }>(`/admin/audit-log?page=${page}&limit=${limit}`, {
       method: "GET",
     });

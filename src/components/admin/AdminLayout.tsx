@@ -14,7 +14,9 @@ import {
   Home,
   CheckSquare,
   Clock,
-  Menu
+  Menu,
+  Activity,
+  Shield
 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
@@ -29,13 +31,15 @@ const AdminLayout: React.FC = () => {
 
   const navigationItems = [
     { path: '/admin', icon: Home, label: 'Dashboard', exact: true },
-    { path: '/admin/users', icon: Users, label: 'Family Members' },
+    { path: '/admin/family-members', icon: Users, label: 'Family Members' },
+    { path: '/admin/admin-users', icon: Shield, label: 'Admin Users' },
     { path: '/admin/family-tree', icon: TreePine, label: 'Family Tree' },
     { path: '/admin/timeline', icon: Clock, label: 'Timeline' },
     { path: '/admin/blog', icon: FileText, label: 'Blog Posts' },
     { path: '/admin/news', icon: Newspaper, label: 'News Articles' },
     { path: '/admin/archive', icon: Archive, label: 'Archive' },
     { path: '/admin/submissions', icon: CheckSquare, label: 'Submissions' },
+    { path: '/admin/activity', icon: Activity, label: 'Activity Log' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 

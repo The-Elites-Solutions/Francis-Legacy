@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, History, GitBranch, Newspaper, BookOpen, Archive } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Home, History, GitBranch, Newspaper, BookOpen, Archive, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
 
 const navigationItems = [
   { name: 'Home', href: '/', icon: Home },
@@ -16,6 +18,24 @@ const navigationItems = [
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate to login even if logout fails
+      navigate('/login');
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (!user) return '';
+    return `${user.first_name} ${user.last_name}`;
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-md border-b border-primary/30">
@@ -34,8 +54,8 @@ export default function Navigation() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-baseline space-x-4">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
@@ -55,6 +75,43 @@ export default function Navigation() {
                 );
               })}
             </div>
+
+            {/* User Profile Dropdown */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2 hover:bg-yellow-50">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm font-medium">{getUserDisplayName()}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <span>My Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {user.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center space-x-2">
+                          <Settings className="w-4 h-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center space-x-2 text-red-600 hover:text-red-700">
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -74,6 +131,53 @@ export default function Navigation() {
               </SheetTrigger>
               <SheetContent side="right" className="bg-white">
                 <div className="flex flex-col space-y-4 mt-4">
+                  {/* User Profile Section */}
+                  {user && (
+                    <div className="border-b border-gray-200 pb-4 mb-4">
+                      <div className="flex items-center space-x-3 px-4 py-2">
+                        <User className="w-6 h-6 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{getUserDisplayName()}</p>
+                          <p className="text-xs text-gray-500">{user.username}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1 mt-3">
+                        <Link
+                          to="/profile"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
+                        >
+                          <User className="w-4 h-4" />
+                          <span>My Profile</span>
+                        </Link>
+                        
+                        {user.role === 'admin' && (
+                          <Link
+                            to="/admin"
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
+                          >
+                            <Settings className="w-4 h-4" />
+                            <span>Admin Dashboard</span>
+                          </Link>
+                        )}
+                        
+                        <button
+                          onClick={() => {
+                            setIsOpen(false);
+                            handleLogout();
+                          }}
+                          className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md w-full text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Navigation Items */}
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.href;

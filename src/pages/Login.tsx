@@ -6,28 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, Eye, EyeOff } from 'lucide-react';
+import { Users, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-const AdminLogin: React.FC = () => {
+const Login: React.FC = () => {
   const { user, login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
-  // Redirect if already logged in as admin
-  if (user && user.role === 'admin') {
-    return <Navigate to="/admin" replace />;
+  // Redirect if already logged in
+  if (user && !mustChangePassword) {
+    const redirectTo = user.role === 'admin' ? '/admin' : '/';
+    return <Navigate to={redirectTo} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setMustChangePassword(false);
 
     try {
-      await login(email, password);
+      const result = await login(username, password);
+      if (result?.user?.mustChangePassword) {
+        setMustChangePassword(true);
+        setError('You must change your password before continuing.');
+      }
       // Navigation will be handled by the redirect logic above
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -39,52 +46,69 @@ const AdminLogin: React.FC = () => {
   const clearAuthData = () => {
     localStorage.removeItem('francis_legacy_user');
     localStorage.removeItem('francis_legacy_token');
+    // Clear any session cookies
+    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     window.location.reload();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <Shield className="h-6 w-6 text-white" />
+          <div className="mx-auto h-12 w-12 gold-texture rounded-full flex items-center justify-center">
+            <Users className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Admin Access
+            Francis Legacy
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to manage Francis Legacy
+            Sign in to access your family history
           </p>
         </div>
 
         {/* Login Form */}
         <Card>
           <CardHeader>
-            <CardTitle>Administrator Login</CardTitle>
+            <CardTitle>Family Member Login</CardTitle>
             <CardDescription>
-              Enter your admin credentials to access the control panel
+              Enter your username/email and password to access Francis Legacy
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant={mustChangePassword ? "default" : "destructive"}>
+                  <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
+              {mustChangePassword && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    This is your first login or your password has been reset. 
+                    Please contact an administrator to change your password.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="username">Username or Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@francislegacy.com"
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="your.username or email@example.com"
                   required
                   disabled={loading}
+                  autoComplete="username"
                 />
+                <p className="text-xs text-gray-500">
+                  Enter your username (e.g., firstname.lastname) or email address
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -98,6 +122,7 @@ const AdminLogin: React.FC = () => {
                     placeholder="Enter your password"
                     required
                     disabled={loading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
@@ -121,31 +146,40 @@ const AdminLogin: React.FC = () => {
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
+
+            {mustChangePassword && (
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  <strong>Need help?</strong> Contact your family administrator to:
+                </p>
+                <ul className="text-sm text-yellow-700 mt-2 list-disc list-inside">
+                  <li>Get your username if you don't know it</li>
+                  <li>Reset your password</li>
+                  <li>Get assistance with first-time login</li>
+                </ul>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Navigation */}
         <div className="text-center">
-          <Link
-            to="/"
-            className="text-sm text-blue-600 hover:text-blue-500"
-          >
-            ← Back to Website
-          </Link>
+          <p className="text-sm text-gray-600">
+            Need help with your account?{' '}
+            <span className="text-yellow-600">Contact your family administrator</span>
+          </p>
         </div>
 
         {/* Development Note */}
         {process.env.NODE_ENV === 'development' && (
-          <Card className="bg-yellow-50 border-yellow-200">
+          <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-4">
-              <div className="text-sm text-yellow-800">
+              <div className="text-sm text-blue-800">
                 <strong>Development Mode:</strong>
                 <br />
-                Default admin credentials:
+                Use generated usernames like: john.smith, mary.johnson, etc.
                 <br />
-                Email: admin@francislegacy.com
-                <br />
-                Password: admin123
+                Check the console for sample credentials.
                 <br />
                 <Button 
                   variant="outline" 
@@ -164,4 +198,4 @@ const AdminLogin: React.FC = () => {
   );
 };
 
-export default AdminLogin;
+export default Login;

@@ -38,7 +38,8 @@ interface EventFormData {
   eventType: string;
   location: string;
   associatedMemberId: string;
-  imageUrl: string;
+  imageFile: File | null;
+  imageUrl: string; // Keep for existing events
 }
 
 const eventTypes = [
@@ -56,6 +57,7 @@ const TimelineManager: React.FC = () => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState<'create' | 'edit'>('create');
@@ -66,7 +68,8 @@ const TimelineManager: React.FC = () => {
     eventDate: '',
     eventType: '',
     location: '',
-    associatedMemberId: '',
+    associatedMemberId: 'none',
+    imageFile: null,
     imageUrl: ''
   });
   const { toast } = useToast();
@@ -102,15 +105,35 @@ const TimelineManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
+    
     try {
+      let imageUrl = formData.imageUrl;
+      
+      // Handle file upload if a new file is selected
+      if (formData.imageFile) {
+        const uploadResult = await apiClient.uploadFile(formData.imageFile, 'timeline');
+        imageUrl = uploadResult.file.location;
+      }
+      
+      const eventData = {
+        title: formData.title,
+        description: formData.description,
+        eventDate: formData.eventDate,
+        eventType: formData.eventType,
+        location: formData.location,
+        associatedMemberId: formData.associatedMemberId === 'none' ? '' : formData.associatedMemberId,
+        imageUrl: imageUrl
+      };
+      
       if (editMode === 'edit' && selectedEvent) {
-        await apiClient.updateTimelineEvent(selectedEvent.id, formData);
+        await apiClient.updateTimelineEvent(selectedEvent.id, eventData);
         toast({
           title: 'Success',
           description: 'Timeline event updated successfully',
         });
       } else {
-        await apiClient.createTimelineEvent(formData);
+        await apiClient.createTimelineEvent(eventData);
         toast({
           title: 'Success',
           description: 'Timeline event created successfully',
@@ -122,11 +145,14 @@ const TimelineManager: React.FC = () => {
       resetForm();
       fetchEvents();
     } catch (error) {
+      console.error('Timeline event error:', error);
       toast({
         title: 'Error',
         description: editMode === 'edit' ? 'Failed to update event' : 'Failed to create event',
         variant: 'destructive',
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -139,7 +165,8 @@ const TimelineManager: React.FC = () => {
       eventDate: event.event_date,
       eventType: event.event_type,
       location: event.location || '',
-      associatedMemberId: event.associated_member_id || '',
+      associatedMemberId: event.associated_member_id || 'none',
+      imageFile: null,
       imageUrl: event.image_url || ''
     });
     setIsDialogOpen(true);
@@ -178,9 +205,37 @@ const TimelineManager: React.FC = () => {
       eventDate: '',
       eventType: '',
       location: '',
-      associatedMemberId: '',
+      associatedMemberId: 'none',
+      imageFile: null,
       imageUrl: ''
     });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid File Type',
+          description: 'Please select an image file',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'File Too Large',
+          description: 'Please select an image smaller than 10MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      setFormData({ ...formData, imageFile: file });
+    }
   };
 
   const getEventTypeInfo = (type: string) => {
@@ -384,7 +439,7 @@ const TimelineManager: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="eventType">Event Type</Label>
-                  <Select value={formData.eventType} onValueChange={(value) => setFormData({ ...formData, eventType: value })}>
+                  <Select value={formData.eventType || undefined} onValueChange={(value) => setFormData({ ...formData, eventType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select event type" />
                     </SelectTrigger>
@@ -438,12 +493,12 @@ const TimelineManager: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="associatedMember">Associated Family Member</Label>
-                <Select value={formData.associatedMemberId} onValueChange={(value) => setFormData({ ...formData, associatedMemberId: value })}>
+                <Select value={formData.associatedMemberId || undefined} onValueChange={(value) => setFormData({ ...formData, associatedMemberId: value === "none" ? "" : value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select family member (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific member</SelectItem>
+                    <SelectItem value="none">No specific member</SelectItem>
                     {familyMembers.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.first_name} {member.last_name}
@@ -454,23 +509,51 @@ const TimelineManager: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="imageUrl">Event Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://..."
-                />
+                <Label htmlFor="imageFile">Event Image</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="imageFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+                  />
+                  {formData.imageFile && (
+                    <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
+                      <Camera className="h-4 w-4 text-green-600" />
+                      <span className="text-sm text-green-700">
+                        Selected: {formData.imageFile.name}
+                      </span>
+                    </div>
+                  )}
+                  {editMode === 'edit' && formData.imageUrl && !formData.imageFile && (
+                    <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-md">
+                      <Camera className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm text-blue-700">
+                        Current image will be kept (upload new file to replace)
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Upload an image file (max 10MB). Supports JPG, PNG, and other image formats.
+                  </p>
+                </div>
               </div>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={uploading}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {editMode === 'edit' ? 'Update Event' : 'Create Event'}
+              <Button type="submit" disabled={uploading}>
+                {uploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {formData.imageFile ? 'Uploading...' : 'Saving...'}
+                  </>
+                ) : (
+                  editMode === 'edit' ? 'Update Event' : 'Create Event'
+                )}
               </Button>
             </DialogFooter>
           </form>

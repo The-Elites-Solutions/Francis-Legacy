@@ -19,10 +19,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Users, Plus, Save, X, RotateCcw, Grid, Link
+  Users, Plus, Save, X, RotateCcw, Grid, Link, Key, RefreshCw, Eye, EyeOff
 } from 'lucide-react';
 
 import { apiClient } from '@/lib/api';
@@ -31,6 +33,7 @@ import MemberNode, { FamilyMember, MemberNodeData } from './MemberNode';
 import { edgeTypes } from './FamilyTreeEdges';
 import { ReactFlowFamilyTreeLayout } from './FamilyTreeLayout';
 import { IMAGEKIT_CONFIG } from '@/lib/imagekit-config';
+import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 
 interface MemberFormData {
   firstName: string;
@@ -139,8 +142,10 @@ const FamilyTreeEditor: React.FC = () => {
     spouseId: ''
   });
   
-  // Photo upload state
-  const [uploading, setUploading] = useState(false);
+  
+  // Password reset state
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetPasswordData, setResetPasswordData] = useState<{username: string; tempPassword: string} | null>(null);
   
   const { toast } = useToast();
 
@@ -442,6 +447,35 @@ const FamilyTreeEditor: React.FC = () => {
     setPendingConnection({ connection: {} as Connection, isOpen: false });
   };
 
+  // Generate username from first and last name
+  const generateUsername = (firstName: string, lastName: string) => {
+    return `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-zA-Z0-9.]/g, '');
+  };
+
+  // Handle password reset for family members
+  const handlePasswordReset = async (memberId: string, memberName: string) => {
+    try {
+      const response = await apiClient.resetFamilyMemberPassword(memberId);
+      
+      setResetPasswordData({
+        username: response.username,
+        tempPassword: response.newPassword
+      });
+      setShowPasswordReset(true);
+      
+      toast({
+        title: 'Password Reset Successful',
+        description: `Password has been reset for ${memberName}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to reset password: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const cleanFormData = (data: MemberFormData) => {
     // Handle "none" values for country and occupation
     const country = data.birthCountry === 'none' ? '' : data.birthCountry;
@@ -469,50 +503,11 @@ const FamilyTreeEditor: React.FC = () => {
     };
   };
 
-  const uploadPhoto = async (file: File): Promise<string> => {
-    try {
-      setUploading(true);
-      const uploadedUrl = await apiClient.uploadFile(file, 'family-photos');
-      return uploadedUrl;
-    } catch (error) {
-      console.error('Photo upload failed:', error);
-      throw new Error('Failed to upload photo');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFileSelect = async (file: File | null) => {
-    if (!file) {
-      setFormData({ ...formData, profilePhotoFile: null, profilePhotoUrl: '' });
-      return;
-    }
-
-    try {
-      // Upload immediately when file is selected
-      const uploadedUrl = await uploadPhoto(file);
-      setFormData({ 
-        ...formData, 
-        profilePhotoFile: null, // Clear the file since it's now uploaded
-        profilePhotoUrl: uploadedUrl 
-      });
-      toast({
-        title: 'Success',
-        description: 'Photo uploaded successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to upload photo. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Photo is already uploaded when file was selected, just use the URL
+      // Photo is already uploaded via ProfilePictureUpload component, just use the URL
       const cleanedData = cleanFormData(formData);
       
       if (editMode === 'edit' && selectedMember) {
@@ -522,10 +517,13 @@ const FamilyTreeEditor: React.FC = () => {
           description: 'Family member updated successfully',
         });
       } else {
-        await apiClient.createFamilyMember(cleanedData);
+        const result = await apiClient.createFamilyMember(cleanedData);
+        
+        // Show success message with authentication info for new members
+        const username = generateUsername(formData.firstName, formData.lastName);
         toast({
-          title: 'Success',
-          description: 'Family member created successfully',
+          title: 'Family Member Created Successfully',
+          description: `${formData.firstName} ${formData.lastName} has been added to the family tree. Username: ${username}`,
         });
       }
       
@@ -632,6 +630,13 @@ const FamilyTreeEditor: React.FC = () => {
       motherId: '',
       spouseId: ''
     });
+  };
+
+  const handlePhotoUpdate = (newPhotoUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      profilePhotoUrl: newPhotoUrl
+    }));
   };
 
   const getMemberName = (member: FamilyMember) => {
@@ -828,7 +833,7 @@ const FamilyTreeEditor: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender</Label>
-                  <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+                  <Select value={formData.gender || undefined} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
@@ -909,45 +914,30 @@ const FamilyTreeEditor: React.FC = () => {
                 </Select>
               </div>
 
-              {/* Profile Photo Upload */}
+              {/* Profile Photo Upload with Cropping */}
               <div className="space-y-2">
-                <Label htmlFor="profilePhoto">Profile Photo</Label>
-                <div className="space-y-2">
-                  <Input
-                    id="profilePhoto"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      handleFileSelect(file);
-                    }}
-                    disabled={uploading}
+                <Label>Profile Photo</Label>
+                <div className="flex justify-center">
+                  <ProfilePictureUpload
+                    currentPhotoUrl={formData.profilePhotoUrl}
+                    userName={formData.firstName && formData.lastName ? `${formData.firstName} ${formData.lastName}` : 'Family Member'}
+                    onPhotoUpdate={handlePhotoUpdate}
+                    isAdminMode={true}
                   />
-                  {uploading && (
-                    <p className="text-sm text-blue-600">Uploading photo...</p>
-                  )}
-                  {formData.profilePhotoUrl && (
-                    <div className="flex items-center space-x-2">
-                      <img 
-                        src={formData.profilePhotoUrl} 
-                        alt="Profile photo" 
-                        className="w-16 h-16 object-cover rounded-md border"
-                      />
-                      <div>
-                        <p className="text-sm text-gray-600">Photo uploaded</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setFormData({ ...formData, profilePhotoUrl: '' })}
-                          className="mt-1"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
+                {formData.profilePhotoUrl && (
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, profilePhotoUrl: '' })}
+                      className="mt-2"
+                    >
+                      Remove Photo
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Biography */}
@@ -962,13 +952,95 @@ const FamilyTreeEditor: React.FC = () => {
                 />
               </div>
 
+              {/* Authentication Information - Show for both create and edit modes */}
+              {formData.firstName && formData.lastName && (
+                <div className="space-y-4 border-t pt-4">
+                  <h4 className="font-medium text-sm text-gray-700">
+                    {editMode === 'edit' ? 'Authentication Information' : 'Login Account Preview'}
+                  </h4>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Username (Auto-generated)</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          value={generateUsername(formData.firstName, formData.lastName)}
+                          readOnly
+                          className="bg-white text-blue-700 font-mono text-sm"
+                        />
+                        <Eye className="h-4 w-4 text-blue-400" />
+                      </div>
+                      <p className="text-xs text-blue-600">
+                        {editMode === 'edit' 
+                          ? 'Current username for this family member'
+                          : 'This member will get automatic login access with this username'
+                        }
+                      </p>
+                    </div>
+                    
+                    {editMode === 'edit' && selectedMember && (
+                      <>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Password Status</Label>
+                          <div className="flex items-center space-x-2">
+                            <div className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
+                              Default Password
+                            </div>
+                            <span className="text-xs text-gray-500">User should change password on first login</span>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                                <RefreshCw className="h-4 w-4" />
+                                Reset Password
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Reset Password</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to reset the password for {formData.firstName} {formData.lastName}? 
+                                  This will generate a new temporary password that you'll need to share with them.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => selectedMember && handlePasswordReset(selectedMember.id, `${formData.firstName} ${formData.lastName}`)}
+                                >
+                                  Reset Password
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </>
+                    )}
+                    
+                    {editMode === 'create' && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Initial Setup</Label>
+                        <div className="text-xs text-blue-600 space-y-1">
+                          <p>• A temporary password will be automatically generated</p>
+                          <p>• The member must change password on first login</p>
+                          <p>• Login credentials will be shown after member creation</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Family Relationships */}
               <div className="space-y-4">
                 <h4 className="font-medium">Family Relationships</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="father">Father</Label>
-                    <Select value={formData.fatherId} onValueChange={(value) => setFormData({ ...formData, fatherId: value })}>
+                    <Select value={formData.fatherId || undefined} onValueChange={(value) => setFormData({ ...formData, fatherId: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select father" />
                       </SelectTrigger>
@@ -985,7 +1057,7 @@ const FamilyTreeEditor: React.FC = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="mother">Mother</Label>
-                    <Select value={formData.motherId} onValueChange={(value) => setFormData({ ...formData, motherId: value })}>
+                    <Select value={formData.motherId || undefined} onValueChange={(value) => setFormData({ ...formData, motherId: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select mother" />
                       </SelectTrigger>
@@ -1002,7 +1074,7 @@ const FamilyTreeEditor: React.FC = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="spouse">Spouse</Label>
-                    <Select value={formData.spouseId} onValueChange={(value) => setFormData({ ...formData, spouseId: value })}>
+                    <Select value={formData.spouseId || undefined} onValueChange={(value) => setFormData({ ...formData, spouseId: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select spouse" />
                       </SelectTrigger>
@@ -1030,6 +1102,71 @@ const FamilyTreeEditor: React.FC = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Reset Result Dialog */}
+      <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Password Reset Successful
+            </DialogTitle>
+            <DialogDescription>
+              The password has been reset. Please share these credentials with the family member.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {resetPasswordData && (
+            <div className="space-y-4 py-4">
+              <Alert>
+                <Key className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Important:</strong> Save these credentials securely and share them with the family member.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Username</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={resetPasswordData.username}
+                      readOnly
+                      className="bg-white font-mono text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Temporary Password</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={resetPasswordData.tempPassword}
+                      readOnly
+                      className="bg-white font-mono text-sm"
+                      type="text"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>• The family member must change this password on first login</p>
+                <p>• This temporary password will expire after first use</p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={() => {
+              setShowPasswordReset(false);
+              setResetPasswordData(null);
+            }}>
+              Got it
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

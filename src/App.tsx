@@ -7,6 +7,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/hooks/useAuth';
 import Layout from '@/components/layout/Layout';
 import LoadingScreen from '@/components/LoadingScreen';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import Login from './pages/Login';
+import UserProfile from './pages/UserProfile';
 import Home from './pages/Home';
 import FamilyHistory from './pages/FamilyHistory';
 import FamilyTree from './pages/FamilyTree';
@@ -17,7 +20,6 @@ import NotFound from './pages/NotFound';
 
 // Admin imports
 import AdminLayout from './components/admin/AdminLayout';
-import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import BlogPage from './pages/admin/BlogPage';
 import NewsPage from './pages/admin/NewsPage';
@@ -25,8 +27,10 @@ import SubmissionsPage from './pages/admin/SubmissionsPage';
 import ArchivePage from './pages/admin/ArchivePage';
 import FamilyTreePage from './pages/admin/FamilyTreePage';
 import TimelinePage from './pages/admin/TimelinePage';
-import UsersPage from './pages/admin/UsersPage';
+import FamilyMembersPage from './pages/admin/FamilyMembersPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 import SettingsPage from './pages/admin/SettingsPage';
+import ActivityPage from './pages/admin/ActivityPage';
 
 const queryClient = new QueryClient();
 
@@ -47,55 +51,96 @@ const App = () => {
         <TooltipProvider>
           <AuthProvider>
             <Toaster />
-            <BrowserRouter>
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true
+              }}
+            >
             <Routes>
-              {/* Public Routes */}
+              {/* Public Login Route - Only route that doesn't require authentication */}
+              <Route path="/login" element={<Login />} />
+
+              {/* Protected Main Website Routes - All require authentication */}
               <Route path="/" element={
-                <Layout>
-                  <Home />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <Home />
+                  </Layout>
+                </ProtectedRoute>
               } />
               <Route path="/family-history" element={
-                <Layout>
-                  <FamilyHistory />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <FamilyHistory />
+                  </Layout>
+                </ProtectedRoute>
               } />
               <Route path="/family-tree" element={
-                <Layout>
-                  <FamilyTree />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <FamilyTree />
+                  </Layout>
+                </ProtectedRoute>
               } />
               <Route path="/news" element={
-                <Layout>
-                  <News />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <News />
+                  </Layout>
+                </ProtectedRoute>
               } />
               <Route path="/blog" element={
-                <Layout>
-                  <Blog />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <Blog />
+                  </Layout>
+                </ProtectedRoute>
               } />
               <Route path="/archives" element={
-                <Layout>
-                  <Archives />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <Archives />
+                  </Layout>
+                </ProtectedRoute>
               } />
 
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
+              {/* User Profile Route - Allow password changes */}
+              <Route path="/profile" element={
+                <ProtectedRoute allowPasswordChange={true}>
+                  <Layout>
+                    <UserProfile />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              {/* Admin Routes - Require admin role */}
+              <Route path="/admin" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
                 <Route index element={<AdminDashboard />} />
-                <Route path="users" element={<UsersPage />} />
+                <Route path="family-members" element={<FamilyMembersPage />} />
+                <Route path="admin-users" element={<AdminUsersPage />} />
                 <Route path="family-tree" element={<FamilyTreePage />} />
                 <Route path="timeline" element={<TimelinePage />} />
                 <Route path="blog" element={<BlogPage />} />
                 <Route path="news" element={<NewsPage />} />
                 <Route path="archive" element={<ArchivePage />} />
                 <Route path="submissions" element={<SubmissionsPage />} />
+                <Route path="activity" element={<ActivityPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
 
-              <Route path="*" element={<NotFound />} />
+              {/* 404 Route */}
+              <Route path="*" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <NotFound />
+                  </Layout>
+                </ProtectedRoute>
+              } />
             </Routes>
             </BrowserRouter>
           </AuthProvider>

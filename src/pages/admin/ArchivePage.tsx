@@ -497,7 +497,7 @@ const ArchivePage: React.FC = () => {
 
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select value={uploadMetadata.category} onValueChange={(value) => setUploadMetadata(prev => ({ ...prev, category: value }))}>
+              <Select value={uploadMetadata.category || undefined} onValueChange={(value) => setUploadMetadata(prev => ({ ...prev, category: value }))}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -606,7 +606,7 @@ const ArchivePage: React.FC = () => {
 
             <div>
               <Label htmlFor="edit-category">Category</Label>
-              <Select value={editMetadata.category} onValueChange={(value) => setEditMetadata(prev => ({ ...prev, category: value }))}>
+              <Select value={editMetadata.category || undefined} onValueChange={(value) => setEditMetadata(prev => ({ ...prev, category: value }))}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>

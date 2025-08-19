@@ -16,11 +16,16 @@ import {
   Image,
   Bell,
   Save,
-  AlertCircle
+  AlertCircle,
+  HardDrive,
+  BarChart3,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { apiClient } from '@/lib/api';
 
 interface SiteSettings {
   siteName: string;
@@ -36,6 +41,26 @@ interface SiteSettings {
   allowedFileTypes: string;
   backupFrequency: string;
   theme: string;
+}
+
+interface StorageStats {
+  totalUsed: number;
+  totalQuota: number;
+  usagePercentage: number;
+  breakdown: {
+    images: number;
+    videos: number;
+    documents: number;
+    other: number;
+  };
+  fileCount: {
+    images: number;
+    videos: number;
+    documents: number;
+    other: number;
+  };
+  isNearCapacity: boolean;
+  isAtCapacity: boolean;
 }
 
 const SettingsPage: React.FC = () => {
@@ -56,6 +81,8 @@ const SettingsPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
+  const [storageLoading, setStorageLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async () => {
@@ -86,6 +113,49 @@ const SettingsPage: React.FC = () => {
   const handleInputChange = (field: keyof SiteSettings, value: string | boolean | number) => {
     setSettings(prev => ({ ...prev, [field]: value }));
   };
+
+  // Utility function to format bytes
+  const formatBytes = (bytes: number, decimals = 2): string => {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
+  // Get storage status color
+  const getStorageStatusColor = (percentage: number): string => {
+    if (percentage >= 90) return 'bg-red-500';
+    if (percentage >= 70) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  // Fetch storage statistics
+  const fetchStorageStats = async () => {
+    setStorageLoading(true);
+    try {
+      const stats = await apiClient.getStorageStats();
+      setStorageStats(stats);
+    } catch (error) {
+      console.error('Failed to fetch storage stats:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load storage statistics',
+        variant: 'destructive',
+      });
+    } finally {
+      setStorageLoading(false);
+    }
+  };
+
+  // Load storage stats on component mount
+  useEffect(() => {
+    fetchStorageStats();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -335,6 +405,127 @@ const SettingsPage: React.FC = () => {
                   Comma-separated list of allowed file extensions
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="h-5 w-5" />
+                  Storage Capacity
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchStorageStats}
+                  disabled={storageLoading}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${storageLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </CardTitle>
+              <CardDescription>
+                Current storage usage and capacity limits
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {storageLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-500">Loading storage statistics...</span>
+                </div>
+              ) : storageStats ? (
+                <>
+                  {/* Storage Warning Alert */}
+                  {storageStats.isNearCapacity && (
+                    <Alert className={`border-l-4 ${storageStats.isAtCapacity ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'}`}>
+                      <AlertCircle className={`h-4 w-4 ${storageStats.isAtCapacity ? 'text-red-600' : 'text-yellow-600'}`} />
+                      <AlertDescription className={storageStats.isAtCapacity ? 'text-red-800' : 'text-yellow-800'}>
+                        {storageStats.isAtCapacity 
+                          ? 'Storage capacity is nearly full! New uploads may be disabled.'
+                          : 'Storage capacity is approaching the limit. Consider reviewing and managing files.'}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label>Storage Usage</Label>
+                      <span className="text-sm font-medium">{storageStats.usagePercentage.toFixed(1)}%</span>
+                    </div>
+                    <Progress 
+                      value={storageStats.usagePercentage} 
+                      className="h-3"
+                    />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{formatBytes(storageStats.totalUsed)} used</span>
+                      <span>{formatBytes(storageStats.totalQuota)} total</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Storage Breakdown */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-gray-500" />
+                      <Label>Storage Breakdown</Label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Images</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.images)}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">{storageStats.fileCount.images} files</div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Videos</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.videos)}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">{storageStats.fileCount.videos} files</div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Documents</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.documents)}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">{storageStats.fileCount.documents} files</div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Other</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.other)}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">{storageStats.fileCount.other} files</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Storage Info */}
+                  <div className="pt-2 border-t">
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <div>• Storage quota can be configured via environment variables</div>
+                      <div>• Only published archive items are counted towards usage</div>
+                      <div>• Statistics are updated in real-time when files are uploaded or deleted</div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Unable to load storage statistics. Please try refreshing or contact support if the issue persists.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -22,7 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Users, 
+  Shield, 
   Plus, 
   Edit2, 
   Trash2, 
@@ -30,14 +30,14 @@ import {
   Phone, 
   Calendar,
   UserCheck,
-  UserX,
-  Search
+  Search,
+  Key
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-interface User {
+interface AdminUser {
   id: string;
   email: string;
   first_name: string;
@@ -64,12 +64,12 @@ interface UserFormData {
   isActive: boolean;
 }
 
-const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+const AdminUsersPage: React.FC = () => {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState<'create' | 'edit'>('create');
   const [formData, setFormData] = useState<UserFormData>({
@@ -104,7 +104,7 @@ const UsersPage: React.FC = () => {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to fetch users',
+        description: 'Failed to fetch admin users',
         variant: 'destructive',
       });
     } finally {
@@ -127,7 +127,7 @@ const UsersPage: React.FC = () => {
         });
         toast({
           title: 'Success',
-          description: 'User updated successfully',
+          description: 'Admin user updated successfully',
         });
       } else {
         await apiClient.createUser({
@@ -138,7 +138,7 @@ const UsersPage: React.FC = () => {
         });
         toast({
           title: 'Success',
-          description: 'User created successfully',
+          description: 'Admin user created successfully',
         });
       }
       
@@ -147,30 +147,15 @@ const UsersPage: React.FC = () => {
       resetForm();
       fetchUsers();
     } catch (error: any) {
-      console.error('Submit error:', error);
-      
-      // Check if user was deleted during edit
-      if (editMode === 'edit' && (error.message?.includes('not found') || error.message?.includes('deleted'))) {
-        toast({
-          title: 'User Not Found',
-          description: 'This user has been deleted. Closing dialog and refreshing the list...',
-          variant: 'destructive',
-        });
-        setIsDialogOpen(false);
-        setSelectedUser(null);
-        resetForm();
-        fetchUsers();
-      } else {
-        toast({
-          title: 'Error',
-          description: editMode === 'edit' ? `Failed to update user: ${error.message || 'Unknown error'}` : `Failed to create user: ${error.message || 'Unknown error'}`,
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Error',
+        description: editMode === 'edit' ? `Failed to update admin user: ${error.message || 'Unknown error'}` : `Failed to create admin user: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: AdminUser) => {
     setSelectedUser(user);
     setEditMode('edit');
     setFormData({
@@ -186,93 +171,45 @@ const UsersPage: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) return;
+  const handleDelete = async (user: AdminUser) => {
+    if (!confirm(`Are you sure you want to delete admin user ${user.first_name} ${user.last_name}?`)) return;
     
     try {
       await apiClient.deleteUser(user.id);
       toast({
         title: 'Success',
-        description: 'User deleted successfully',
+        description: 'Admin user deleted successfully',
       });
       fetchUsers();
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete user',
+        description: 'Failed to delete admin user',
         variant: 'destructive',
       });
     }
   };
 
-  const handleStatusToggle = async (user: User) => {
-    const newStatus = !user.is_active;
-    const action = newStatus ? 'activate' : 'deactivate';
-    
-    if (!confirm(`Are you sure you want to ${action} ${user.first_name} ${user.last_name}?`)) return;
-    
-    try {
-      await apiClient.updateUser(user.id, {
-        email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        phone: user.phone,
-        birthDate: user.birth_date,
-        isActive: newStatus,
-        role: user.role
-      });
-      toast({
-        title: 'Success',
-        description: `User ${action}d successfully`,
-      });
-      fetchUsers();
-    } catch (error: any) {
-      console.error('Status toggle error:', error);
-      
-      // Check if user was deleted
-      if (error.message?.includes('not found') || error.message?.includes('deleted')) {
-        toast({
-          title: 'User Not Found',
-          description: 'This user has been deleted. Refreshing the list...',
-          variant: 'destructive',
-        });
-        // Refresh the user list to remove deleted users
-        fetchUsers();
-      } else {
-        toast({
-          title: 'Error',
-          description: `Failed to ${action} user: ${error.message || 'Unknown error'}`,
-          variant: 'destructive',
-        });
-      }
-    }
-  };
 
-  const handlePasswordReset = async (user: User) => {
-    if (!confirm(`Are you sure you want to reset the password for ${user.first_name} ${user.last_name}? They will receive a new temporary password via email.`)) {
+  const handlePasswordReset = async (user: AdminUser) => {
+    if (!confirm(`Are you sure you want to reset the password for admin user ${user.first_name} ${user.last_name}?`)) {
       return;
     }
 
     try {
       const response = await apiClient.resetUserPassword(user.id);
       
-      if (response.emailSent) {
-        toast({
-          title: 'Success',
-          description: `Password reset successful! New password sent to ${user.email}`,
-        });
-      } else {
-        toast({
-          title: 'Password Reset',
-          description: 'Password was reset but email could not be sent. Please contact the user directly.',
-          variant: 'default',
-        });
-      }
+      toast({
+        title: 'Success',
+        description: response.emailSent 
+          ? `Password reset email sent to ${user.email}` 
+          : 'Password reset successful but email could not be sent',
+        variant: response.emailSent ? 'default' : 'destructive',
+      });
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to reset password';
       toast({
         title: 'Error',
-        description: errorMessage,
+        description: `Failed to reset password: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
     }
@@ -298,12 +235,12 @@ const UsersPage: React.FC = () => {
     });
   };
 
-  const getUserName = (user: User) => {
+  const getUserName = (user: AdminUser) => {
     return `${user.first_name} ${user.last_name}`;
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center p-8">Loading users...</div>;
+    return <div className="flex items-center justify-center p-8">Loading admin users...</div>;
   }
 
   return (
@@ -312,14 +249,14 @@ const UsersPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            Family Members
+            <Shield className="h-6 w-6" />
+            Admin Users
           </h2>
-          <p className="text-gray-600">Manage registered family members and their accounts</p>
+          <p className="text-gray-600">Manage administrator accounts with full system access</p>
         </div>
         <Button onClick={openCreateDialog} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Add Family Member
+          Add Admin User
         </Button>
       </div>
 
@@ -330,14 +267,14 @@ const UsersPage: React.FC = () => {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or email..."
+                placeholder="Search admin users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
               />
             </div>
             <div className="text-sm text-gray-500">
-              {filteredUsers.length} of {users.length} members
+              {filteredUsers.length} admin users
             </div>
           </div>
         </CardContent>
@@ -346,20 +283,20 @@ const UsersPage: React.FC = () => {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Family Members</CardTitle>
+          <CardTitle>Administrator Accounts</CardTitle>
           <CardDescription>
-            All registered family members and their account status
+            Admin users have full access to the admin panel and all system features
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Member</TableHead>
+                <TableHead>Admin User</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -401,28 +338,18 @@ const UsersPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                      <Shield className="h-3 w-3 mr-1" />
                       {user.role}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Badge 
-                        variant={user.is_active ? 'success' : 'destructive'}
-                        className={`cursor-pointer hover:opacity-80 transition-opacity ${user.is_active ? 'bg-green-100 text-green-800' : ''}`}
-                        onClick={() => handleStatusToggle(user)}
-                        title={`Click to ${user.is_active ? 'deactivate' : 'activate'} user`}
+                        variant="default"
+                        className="bg-green-100 text-green-800"
                       >
-                        {user.is_active ? (
-                          <>
-                            <UserCheck className="h-3 w-3 mr-1" />
-                            Active
-                          </>
-                        ) : (
-                          <>
-                            <UserX className="h-3 w-3 mr-1" />
-                            Inactive
-                          </>
-                        )}
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        Active
                       </Badge>
                       {user.email_verified && (
                         <Badge variant="outline" className="text-xs">
@@ -450,10 +377,10 @@ const UsersPage: React.FC = () => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => handlePasswordReset(user)}
-                        title="Reset Password - Send new temporary password via email"
+                        title="Reset Password"
                         className="hover:bg-blue-50"
                       >
-                        🔑
+                        <Key className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(user)}>
                         <Trash2 className="h-4 w-4" />
@@ -473,12 +400,12 @@ const UsersPage: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
-                {editMode === 'edit' ? 'Edit Family Member' : 'Add Family Member'}
+                {editMode === 'edit' ? 'Edit Admin User' : 'Add Admin User'}
               </DialogTitle>
               <DialogDescription>
                 {editMode === 'edit' 
-                  ? 'Update the family member details below.' 
-                  : 'Fill in the details to add a new family member.'}
+                  ? 'Update the admin user details below.' 
+                  : 'Create a new administrator account.'}
               </DialogDescription>
             </DialogHeader>
 
@@ -584,7 +511,7 @@ const UsersPage: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit">
-                {editMode === 'edit' ? 'Update Member' : 'Create Member'}
+                {editMode === 'edit' ? 'Update Admin User' : 'Create Admin User'}
               </Button>
             </DialogFooter>
           </form>
@@ -594,4 +521,4 @@ const UsersPage: React.FC = () => {
   );
 };
 
-export default UsersPage;
+export default AdminUsersPage;
