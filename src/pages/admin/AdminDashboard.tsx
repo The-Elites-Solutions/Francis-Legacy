@@ -173,7 +173,17 @@ const AdminDashboard: React.FC = () => {
       fetchStats(true);
     }, 30000);
 
-    return () => clearInterval(interval);
+    // Listen for submission review events to refresh immediately
+    const handleSubmissionReviewed = () => {
+      fetchStats(true);
+    };
+
+    window.addEventListener('submissionReviewed', handleSubmissionReviewed);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('submissionReviewed', handleSubmissionReviewed);
+    };
   }, []);
 
   if (loading) {

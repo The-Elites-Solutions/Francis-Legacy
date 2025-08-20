@@ -23,7 +23,11 @@ interface ContentSubmission {
   review_notes?: string;
 }
 
-const ModerationQueue: React.FC = () => {
+interface ModerationQueueProps {
+  onSubmissionReviewed?: () => void;
+}
+
+const ModerationQueue: React.FC<ModerationQueueProps> = ({ onSubmissionReviewed }) => {
   const [submissions, setSubmissions] = useState<ContentSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<ContentSubmission | null>(null);
@@ -62,6 +66,9 @@ const ModerationQueue: React.FC = () => {
       setSelectedSubmission(null);
       setReviewNotes('');
       fetchSubmissions();
+      
+      // Call the callback to refresh dashboard stats
+      onSubmissionReviewed?.();
     } catch (error) {
       toast({
         title: 'Error',

@@ -581,6 +581,116 @@ class ApiClient {
     });
   }
 
+  async getImageKitStats() {
+    return this.request<{
+      usage: {
+        storage: {
+          used: number;
+          limit: number;
+          percentage: number;
+        };
+        bandwidth: {
+          used: number;
+          limit: number;
+          percentage: number;
+        };
+        requests: {
+          used: number;
+          limit: number;
+          percentage: number;
+        };
+        planType: string;
+        resetDate: string | null;
+        error?: string;
+      };
+      files: {
+        totalFiles: number;
+        totalSize: number;
+        fileTypes: {
+          images: number;
+          videos: number;
+          documents: number;
+          other: number;
+        };
+        hasMore: boolean;
+        error?: string;
+      };
+      lastUpdated: string;
+    }>("/admin/imagekit-stats", {
+      method: "GET",
+    });
+  }
+
+  async getEnhancedStorageStats() {
+    return this.request<{
+      local: {
+        totalUsed: number;
+        totalQuota: number;
+        usagePercentage: number;
+        breakdown: {
+          images: number;
+          videos: number;
+          documents: number;
+          other: number;
+        };
+        fileCount: {
+          images: number;
+          videos: number;
+          documents: number;
+          other: number;
+        };
+        isNearCapacity: boolean;
+        isAtCapacity: boolean;
+      };
+      imagekit: {
+        usage: {
+          storage: {
+            used: number;
+            limit: number;
+            percentage: number;
+          };
+          bandwidth: {
+            used: number;
+            limit: number;
+            percentage: number;
+          };
+          requests: {
+            used: number;
+            limit: number;
+            percentage: number;
+          };
+          planType: string;
+          resetDate: string | null;
+          error?: string;
+        };
+        files: {
+          totalFiles: number;
+          totalSize: number;
+          fileTypes: {
+            images: number;
+            videos: number;
+            documents: number;
+            other: number;
+          };
+          hasMore: boolean;
+          error?: string;
+        };
+        lastUpdated: string;
+      };
+      summary: {
+        totalLocalStorage: number;
+        totalImageKitStorage: number;
+        localQuota: number;
+        imagekitQuota: number;
+        combinedUsage: number;
+        combinedQuota: number;
+        lastUpdated: string;
+      };
+    }>("/admin/enhanced-storage-stats", {
+      method: "GET",
+    });
+  }
+
   // Admin archive methods
   async getAdminArchives(filters?: {
     category?: string;
@@ -1116,6 +1226,68 @@ class ApiClient {
       generations: number;
       locations: number;
     }>("/family-history/stats", {
+      method: "GET",
+    });
+  }
+
+  // Submission methods
+  async getSubmissions() {
+    return this.request<any[]>("/submissions", {
+      method: "GET",
+    });
+  }
+
+  async getMySubmissions() {
+    return this.request<any[]>("/submissions/my-submissions", {
+      method: "GET",
+    });
+  }
+
+  async createSubmission(submissionData: {
+    type: 'news' | 'blog' | 'archive';
+    title: string;
+    content: any;
+  }) {
+    return this.request<{
+      message: string;
+      submission: any;
+    }>("/submissions", {
+      method: "POST",
+      body: JSON.stringify(submissionData),
+    });
+  }
+
+  async getSubmissionById(id: string) {
+    return this.request<any>(`/submissions/${id}`, {
+      method: "GET",
+    });
+  }
+
+  async reviewSubmission(id: string, status: 'approved' | 'rejected', reviewNotes?: string) {
+    return this.request<{
+      message: string;
+      submission: any;
+    }>(`/submissions/${id}/review`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, reviewNotes }),
+    });
+  }
+
+  async deleteSubmission(id: string) {
+    return this.request<{
+      message: string;
+    }>(`/submissions/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getSubmissionStats() {
+    return this.request<{
+      pending: number;
+      approved: number;
+      rejected: number;
+      total: number;
+    }>("/submissions/stats/overview", {
       method: "GET",
     });
   }

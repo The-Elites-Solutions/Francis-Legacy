@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, FileText, Image, Video, File, Upload, Plus } from 'lucide-react';
+import { Search, Calendar, FileText, Image, Video, File, Plus, Music, Archive } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api';
+import SubmissionForm from '@/components/SubmissionForm';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ArchiveItem {
   id: string;
@@ -54,20 +53,9 @@ export default function Archives() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedType, setSelectedType] = useState('All');
   const [selectedDecade, setSelectedDecade] = useState('All');
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadMetadata, setUploadMetadata] = useState({
-    title: '',
-    description: '',
-    category: '',
-    tags: '',
-    date_taken: '',
-    location: '',
-    person_related: ''
-  });
   
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadArchives();
@@ -106,64 +94,7 @@ export default function Archives() {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      // Auto-populate title from filename
-      if (!uploadMetadata.title) {
-        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-        setUploadMetadata(prev => ({ ...prev, title: nameWithoutExt }));
-      }
-    }
-  };
 
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    setUploading(true);
-    try {
-      const tagsArray = uploadMetadata.tags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
-
-      const result = await apiClient.uploadAndCreateArchive(selectedFile, {
-        title: uploadMetadata.title,
-        description: uploadMetadata.description,
-        category: uploadMetadata.category,
-        tags: tagsArray,
-        date_taken: uploadMetadata.date_taken || undefined,
-        location: uploadMetadata.location,
-        person_related: uploadMetadata.person_related
-      });
-
-      toast({
-        title: 'Success',
-        description: 'Archive uploaded successfully!'
-      });
-
-      setShowUploadDialog(false);
-      setSelectedFile(null);
-      setUploadMetadata({
-        title: '', description: '', category: '', tags: '',
-        date_taken: '', location: '', person_related: ''
-      });
-      
-      // Reload archives to show the new item
-      loadArchives();
-      loadStats();
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: 'Upload Failed',
-        description: error instanceof Error ? error.message : 'Upload failed',
-        variant: 'destructive'
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleDownload = async (archive: ArchiveItem) => {
     try {
@@ -213,16 +144,22 @@ export default function Archives() {
   };
 
   const getTypeIcon = (type: string) => {
-    if (type.includes('document') || type.includes('pdf') || type.includes('text')) return FileText;
-    if (type.includes('image')) return Image;
-    if (type.includes('video')) return Video;
+    if (type.includes('pdf')) return FileText;
+    if (type.includes('document') || type.includes('text') || type.includes('docx') || type.includes('doc')) return FileText;
+    if (type.includes('image') || type.includes('photo') || type.includes('png') || type.includes('jpg') || type.includes('jpeg')) return Image;
+    if (type.includes('video') || type.includes('mp4') || type.includes('avi') || type.includes('mov')) return Video;
+    if (type.includes('audio') || type.includes('mp3') || type.includes('wav') || type.includes('music')) return Music;
+    if (type.includes('zip') || type.includes('rar') || type.includes('tar')) return Archive;
     return File;
   };
 
   const getTypeColor = (type: string) => {
-    if (type.includes('document') || type.includes('pdf') || type.includes('text')) return 'bg-blue-500/20 text-blue-400';
-    if (type.includes('image')) return 'bg-green-500/20 text-green-400';
-    if (type.includes('video')) return 'bg-purple-500/20 text-purple-400';
+    if (type.includes('pdf')) return 'bg-red-500/20 text-red-400';
+    if (type.includes('document') || type.includes('text') || type.includes('docx') || type.includes('doc')) return 'bg-blue-500/20 text-blue-400';
+    if (type.includes('image') || type.includes('photo') || type.includes('png') || type.includes('jpg') || type.includes('jpeg')) return 'bg-green-500/20 text-green-400';
+    if (type.includes('video') || type.includes('mp4') || type.includes('avi') || type.includes('mov')) return 'bg-purple-500/20 text-purple-400';
+    if (type.includes('audio') || type.includes('mp3') || type.includes('wav') || type.includes('music')) return 'bg-pink-500/20 text-pink-400';
+    if (type.includes('zip') || type.includes('rar') || type.includes('tar')) return 'bg-orange-500/20 text-orange-400';
     return 'bg-gray-500/20 text-gray-400';
   };
 
@@ -305,13 +242,19 @@ export default function Archives() {
 
           {/* Upload Button */}
           <div className="flex justify-center mt-6">
-            <Button 
-              onClick={() => setShowUploadDialog(true)}
-              className="gold-texture text-white hover:opacity-90 font-semibold"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add to Archives
-            </Button>
+            {user ? (
+              <SubmissionForm 
+                type="archive" 
+                onSubmissionSuccess={loadArchives}
+                triggerText="Add to Archives"
+                className="gold-texture text-white hover:opacity-90 font-semibold"
+              />
+            ) : (
+              <Button className="gold-texture text-white hover:opacity-90 font-semibold" disabled>
+                <Plus className="w-4 h-4 mr-2" />
+                Login to Add Archives
+              </Button>
+            )}
           </div>
         </div>
 
@@ -325,23 +268,52 @@ export default function Archives() {
 
         {/* Archive Grid */}
         {!loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
             {archives.map((item) => {
               const TypeIcon = getTypeIcon(item.file_type);
               return (
                 <Card key={item.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
-                  <div className="aspect-video overflow-hidden rounded-t-lg relative">
-                    <img 
-                      src={item.file_url} 
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                  <div className="aspect-square w-full h-[382px] max-w-[382px] max-h-[382px] mx-auto overflow-hidden rounded-t-lg relative">
+                    {item.file_type.includes('image') ? (
+                      <img 
+                        src={item.file_url} 
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          // Fallback to icon if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.fallback-icon')) {
+                            const fallbackDiv = document.createElement('div');
+                            fallbackDiv.className = 'fallback-icon w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center';
+                            fallbackDiv.innerHTML = `
+                              <div class="bg-white/80 rounded-full p-8 shadow-lg">
+                                <svg class="w-24 h-24 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                                </svg>
+                              </div>
+                            `;
+                            parent.appendChild(fallbackDiv);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center group-hover:from-yellow-100 group-hover:to-yellow-150 transition-all duration-300">
+                        <div className="bg-white/80 rounded-full p-8 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <TypeIcon className="w-24 h-24 text-yellow-600" />
+                        </div>
+                      </div>
+                    )}
                     <div className={`absolute top-3 left-3 px-2 py-1 rounded-md flex items-center space-x-1 ${getTypeColor(item.file_type)}`}>
                       <TypeIcon className="w-3 h-3" />
                       <span className="text-xs font-medium capitalize">
-                        {item.file_type.includes('image') ? 'photo' : 
-                         item.file_type.includes('video') ? 'video' : 
-                         item.file_type.includes('audio') ? 'audio' : 'document'}
+                        {item.file_type.includes('pdf') ? 'PDF' :
+                         item.file_type.includes('image') || item.file_type.includes('photo') || item.file_type.includes('png') || item.file_type.includes('jpg') || item.file_type.includes('jpeg') ? 'Photo' : 
+                         item.file_type.includes('video') || item.file_type.includes('mp4') || item.file_type.includes('avi') || item.file_type.includes('mov') ? 'Video' : 
+                         item.file_type.includes('audio') || item.file_type.includes('mp3') || item.file_type.includes('wav') || item.file_type.includes('music') ? 'Audio' :
+                         item.file_type.includes('zip') || item.file_type.includes('rar') || item.file_type.includes('tar') ? 'Archive' :
+                         item.file_type.includes('document') || item.file_type.includes('text') || item.file_type.includes('docx') || item.file_type.includes('doc') ? 'Document' : 'File'}
                       </span>
                     </div>
                     <div className="absolute top-3 right-3 bg-white/90 text-foreground/90 px-2 py-1 rounded-md text-xs shadow-sm">
@@ -477,144 +449,6 @@ export default function Archives() {
           </div>
         )}
 
-        {/* Upload Dialog */}
-        <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-          <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-md mx-2 sm:mx-auto max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add to Archives</DialogTitle>
-              <DialogDescription>
-                Upload a document, photo, or video to add to the family archives.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              {/* File Selection */}
-              <div>
-                <Label htmlFor="file">Select File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                  onChange={handleFileSelect}
-                  className="mt-1"
-                />
-                {selectedFile && (
-                  <p className="text-sm text-foreground/60 mt-1">
-                    {selectedFile.name} ({formatFileSize(selectedFile.size)})
-                  </p>
-                )}
-              </div>
-
-              {/* Title */}
-              <div>
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={uploadMetadata.title}
-                  onChange={(e) => setUploadMetadata(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter a descriptive title"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={uploadMetadata.description}
-                  onChange={(e) => setUploadMetadata(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe this archive item..."
-                  className="mt-1"
-                  rows={3}
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select value={uploadMetadata.category} onValueChange={(value) => setUploadMetadata(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.filter(cat => cat !== 'All').map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <Label htmlFor="tags">Tags</Label>
-                <Input
-                  id="tags"
-                  value={uploadMetadata.tags}
-                  onChange={(e) => setUploadMetadata(prev => ({ ...prev, tags: e.target.value }))}
-                  placeholder="Enter tags separated by commas"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Date */}
-              <div>
-                <Label htmlFor="date_taken">Date</Label>
-                <Input
-                  id="date_taken"
-                  type="date"
-                  value={uploadMetadata.date_taken}
-                  onChange={(e) => setUploadMetadata(prev => ({ ...prev, date_taken: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Location */}
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={uploadMetadata.location}
-                  onChange={(e) => setUploadMetadata(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="Where was this taken/created?"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Person */}
-              <div>
-                <Label htmlFor="person_related">People</Label>
-                <Input
-                  id="person_related"
-                  value={uploadMetadata.person_related}
-                  onChange={(e) => setUploadMetadata(prev => ({ ...prev, person_related: e.target.value }))}
-                  placeholder="Who is featured in this item?"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Upload Button */}
-              <div className="flex space-x-2 pt-4">
-                <Button
-                  onClick={handleUpload}
-                  disabled={!selectedFile || !uploadMetadata.title || uploading}
-                  className="flex-1 gold-texture text-white"
-                >
-                  {uploading ? 'Uploading...' : 'Upload to Archives'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowUploadDialog(false)}
-                  disabled={uploading}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

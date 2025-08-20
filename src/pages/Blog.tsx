@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import SubmissionForm from '@/components/SubmissionForm';
+import { useAuth } from '@/hooks/useAuth';
 
 interface BlogPost {
   id: string;
@@ -42,6 +44,7 @@ export default function Blog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchBlogPosts();
@@ -336,9 +339,20 @@ export default function Blog() {
                 Do you have a family story, memory, or experience you'd like to share? 
                 Your contributions help preserve our family legacy for future generations.
               </p>
-              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
-                Write a Blog Post
-              </Button>
+              <div className="flex justify-center">
+                {user ? (
+                  <SubmissionForm 
+                    type="blog" 
+                    onSubmissionSuccess={fetchBlogPosts}
+                    triggerText="Write a Blog Post"
+                    className="gold-texture text-white hover:opacity-90 font-semibold"
+                  />
+                ) : (
+                  <Button className="gold-texture text-white hover:opacity-90 font-semibold" disabled>
+                    Login to Write Blog Post
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

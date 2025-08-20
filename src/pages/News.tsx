@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import SubmissionForm from '@/components/SubmissionForm';
+import { useAuth } from '@/hooks/useAuth';
 
 interface NewsItem {
   id: string;
@@ -41,6 +43,7 @@ export default function News() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchNewsArticles();
@@ -289,9 +292,20 @@ export default function News() {
                 Help keep our family connected by sharing your updates, achievements, and special moments. 
                 Every story matters and contributes to our rich family tapestry.
               </p>
-              <Button className="gold-texture text-white hover:opacity-90 font-semibold">
-                Share Your News
-              </Button>
+              <div className="flex justify-center">
+                {user ? (
+                  <SubmissionForm 
+                    type="news" 
+                    onSubmissionSuccess={fetchNewsArticles}
+                    triggerText="Share Your News"
+                    className="gold-texture text-white hover:opacity-90 font-semibold"
+                  />
+                ) : (
+                  <Button className="gold-texture text-white hover:opacity-90 font-semibold" disabled>
+                    Login to Share News
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
