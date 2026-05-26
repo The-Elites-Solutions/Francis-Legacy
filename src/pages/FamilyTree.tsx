@@ -1392,12 +1392,14 @@ function FamilyTreePage() {
                   >
                     <Background color="#f1f5f9" gap={20} />
                     <Controls />
-                    <MiniMap 
-                      nodeStrokeColor="#eab308"
-                      nodeColor="#f3f4f6"
-                      maskColor="rgba(234, 179, 8, 0.1)"
-                      position="bottom-right"
-                    />
+                    {!isMobile && (
+                      <MiniMap
+                        nodeStrokeColor="#eab308"
+                        nodeColor="#f3f4f6"
+                        maskColor="rgba(234, 179, 8, 0.1)"
+                        position="bottom-right"
+                      />
+                    )}
                   </ReactFlow>
                 </div>
               </CardContent>
