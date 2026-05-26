@@ -171,7 +171,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Development Note */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-4">
               <div className="text-sm text-blue-800">
