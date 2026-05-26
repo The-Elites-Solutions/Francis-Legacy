@@ -1117,8 +1117,6 @@ class ApiClient {
 
   async createTimelineEvent(eventData: {
     title: string;
-    slug: string;
-    content: string;
     description?: string;
     eventDate?: string;
     eventType?: string;
@@ -1143,8 +1141,6 @@ class ApiClient {
     id: string,
     eventData: {
       title: string;
-      slug: string;
-      content: string;
       description?: string;
       eventDate?: string;
       eventType?: string;
