@@ -191,6 +191,9 @@ class ApiClient {
     title: string;
     slug: string;
     content: string;
+    excerpt?: string;
+    featuredImageUrl?: string;
+    status?: 'draft' | 'published';
   }) {
     return this.request<{
       id: string;
@@ -211,6 +214,9 @@ class ApiClient {
       title: string;
       slug: string;
       content: string;
+      excerpt?: string;
+      featuredImageUrl?: string;
+      status?: 'draft' | 'published';
     }
   ) {
     return this.request<{
@@ -1031,6 +1037,9 @@ class ApiClient {
     title: string;
     slug: string;
     content: string;
+    excerpt?: string;
+    featuredImageUrl?: string;
+    status?: 'draft' | 'published';
   }) {
     return this.request<{
       id: string;
@@ -1051,6 +1060,9 @@ class ApiClient {
       title: string;
       slug: string;
       content: string;
+      excerpt?: string;
+      featuredImageUrl?: string;
+      status?: 'draft' | 'published';
     }
   ) {
     return this.request<{
@@ -1105,6 +1117,12 @@ class ApiClient {
     title: string;
     slug: string;
     content: string;
+    description?: string;
+    eventDate?: string;
+    eventType?: string;
+    location?: string;
+    associatedMemberId?: string;
+    imageUrl?: string;
   }) {
     return this.request<{
       id: string;
@@ -1125,6 +1143,12 @@ class ApiClient {
       title: string;
       slug: string;
       content: string;
+      description?: string;
+      eventDate?: string;
+      eventType?: string;
+      location?: string;
+      associatedMemberId?: string;
+      imageUrl?: string;
     }
   ) {
     return this.request<{
