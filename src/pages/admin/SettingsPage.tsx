@@ -44,23 +44,34 @@ interface SiteSettings {
 }
 
 interface StorageStats {
-  totalUsed: number;
-  totalQuota: number;
-  usagePercentage: number;
-  breakdown: {
-    images: number;
-    videos: number;
-    documents: number;
-    other: number;
+  local: {
+    totalUsed: number;
+    totalQuota: number;
+    usagePercentage: number;
+    breakdown: { images: number; videos: number; documents: number; other: number };
+    fileCount: { images: number; videos: number; documents: number; other: number };
+    isNearCapacity: boolean;
+    isAtCapacity: boolean;
   };
-  fileCount: {
-    images: number;
-    videos: number;
-    documents: number;
-    other: number;
+  imagekit: {
+    usage: {
+      storage: { used: number; limit: number; percentage: number };
+      bandwidth: { used: number; limit: number; percentage: number };
+      planType: string;
+      error?: string;
+    };
+    files: { totalFiles: number; totalSize: number };
+    lastUpdated: string;
   };
-  isNearCapacity: boolean;
-  isAtCapacity: boolean;
+  summary: {
+    totalLocalStorage: number;
+    totalImageKitStorage: number;
+    localQuota: number;
+    imagekitQuota: number;
+    combinedUsage: number;
+    combinedQuota: number;
+    lastUpdated: string;
+  };
 }
 
 const SettingsPage: React.FC = () => {
@@ -138,7 +149,7 @@ const SettingsPage: React.FC = () => {
   const fetchStorageStats = async () => {
     setStorageLoading(true);
     try {
-      const stats = await apiClient.getStorageStats();
+      const stats = await apiClient.getEnhancedStorageStats();
       setStorageStats(stats);
     } catch (error) {
       console.error('Failed to fetch storage stats:', error);
@@ -439,72 +450,96 @@ const SettingsPage: React.FC = () => {
               ) : storageStats ? (
                 <>
                   {/* Storage Warning Alert */}
-                  {storageStats.isNearCapacity && (
-                    <Alert className={`border-l-4 ${storageStats.isAtCapacity ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'}`}>
-                      <AlertCircle className={`h-4 w-4 ${storageStats.isAtCapacity ? 'text-red-600' : 'text-yellow-600'}`} />
-                      <AlertDescription className={storageStats.isAtCapacity ? 'text-red-800' : 'text-yellow-800'}>
-                        {storageStats.isAtCapacity 
+                  {storageStats.local.isNearCapacity && (
+                    <Alert className={`border-l-4 ${storageStats.local.isAtCapacity ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'}`}>
+                      <AlertCircle className={`h-4 w-4 ${storageStats.local.isAtCapacity ? 'text-red-600' : 'text-yellow-600'}`} />
+                      <AlertDescription className={storageStats.local.isAtCapacity ? 'text-red-800' : 'text-yellow-800'}>
+                        {storageStats.local.isAtCapacity
                           ? 'Storage capacity is nearly full! New uploads may be disabled.'
                           : 'Storage capacity is approaching the limit. Consider reviewing and managing files.'}
                       </AlertDescription>
                     </Alert>
                   )}
 
-                  {/* Progress Bar */}
+                  {/* Local Storage Progress Bar */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <Label>Storage Usage</Label>
-                      <span className="text-sm font-medium">{storageStats.usagePercentage.toFixed(1)}%</span>
+                      <Label>Local Storage Usage</Label>
+                      <span className="text-sm font-medium">{storageStats.local.usagePercentage.toFixed(1)}%</span>
                     </div>
-                    <Progress 
-                      value={storageStats.usagePercentage} 
+                    <Progress
+                      value={storageStats.local.usagePercentage}
                       className="h-3"
                     />
                     <div className="flex justify-between text-sm text-gray-500">
-                      <span>{formatBytes(storageStats.totalUsed)} used</span>
-                      <span>{formatBytes(storageStats.totalQuota)} total</span>
+                      <span>{formatBytes(storageStats.local.totalUsed)} used</span>
+                      <span>{formatBytes(storageStats.local.totalQuota)} total</span>
                     </div>
+                  </div>
+
+                  {/* ImageKit Storage */}
+                  {!storageStats.imagekit.usage.error && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label>ImageKit Storage</Label>
+                        <span className="text-sm font-medium">{storageStats.imagekit.usage.storage.percentage.toFixed(1)}%</span>
+                      </div>
+                      <Progress
+                        value={storageStats.imagekit.usage.storage.percentage}
+                        className="h-3"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>{formatBytes(storageStats.imagekit.usage.storage.used)} used</span>
+                        <span>{formatBytes(storageStats.imagekit.usage.storage.limit)} limit · {storageStats.imagekit.files.totalFiles} files · plan: {storageStats.imagekit.usage.planType}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Combined summary */}
+                  <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500 space-y-1">
+                    <div className="font-medium text-gray-700">Combined totals</div>
+                    <div>Local + ImageKit used: {formatBytes(storageStats.summary.combinedUsage)} / {formatBytes(storageStats.summary.combinedQuota)}</div>
                   </div>
 
                   <Separator />
 
-                  {/* Storage Breakdown */}
+                  {/* Local Storage Breakdown */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <BarChart3 className="h-4 w-4 text-gray-500" />
-                      <Label>Storage Breakdown</Label>
+                      <Label>Local Breakdown</Label>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">Images</span>
-                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.images)}</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.local.breakdown.images)}</span>
                         </div>
-                        <div className="text-xs text-gray-500">{storageStats.fileCount.images} files</div>
+                        <div className="text-xs text-gray-500">{storageStats.local.fileCount.images} files</div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">Videos</span>
-                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.videos)}</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.local.breakdown.videos)}</span>
                         </div>
-                        <div className="text-xs text-gray-500">{storageStats.fileCount.videos} files</div>
+                        <div className="text-xs text-gray-500">{storageStats.local.fileCount.videos} files</div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">Documents</span>
-                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.documents)}</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.local.breakdown.documents)}</span>
                         </div>
-                        <div className="text-xs text-gray-500">{storageStats.fileCount.documents} files</div>
+                        <div className="text-xs text-gray-500">{storageStats.local.fileCount.documents} files</div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">Other</span>
-                          <span className="text-sm font-medium">{formatBytes(storageStats.breakdown.other)}</span>
+                          <span className="text-sm font-medium">{formatBytes(storageStats.local.breakdown.other)}</span>
                         </div>
-                        <div className="text-xs text-gray-500">{storageStats.fileCount.other} files</div>
+                        <div className="text-xs text-gray-500">{storageStats.local.fileCount.other} files</div>
                       </div>
                     </div>
                   </div>
