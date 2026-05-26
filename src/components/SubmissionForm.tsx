@@ -167,7 +167,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
       console.error('Error submitting:', error);
       toast({
         title: 'Error',
-        description: 'Failed to submit. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to submit. Please try again.',
         variant: 'destructive',
       });
     } finally {
