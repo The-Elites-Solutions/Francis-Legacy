@@ -801,7 +801,7 @@ const FamilyTreeEditor: React.FC = () => {
 
             <div className="space-y-4 py-4">
               {/* Basic Information */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
@@ -822,7 +822,7 @@ const FamilyTreeEditor: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="maidenName">Maiden Name (Optional)</Label>
                   <Input
@@ -847,7 +847,7 @@ const FamilyTreeEditor: React.FC = () => {
               </div>
 
               {/* Dates and Places */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="birthDate">Birth Date</Label>
                   <Input
@@ -869,7 +869,7 @@ const FamilyTreeEditor: React.FC = () => {
               </div>
 
               {/* Birth Place - Country and City */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="birthCountry">Birth Country</Label>
                   <Select value={formData.birthCountry} onValueChange={(value) => setFormData({ ...formData, birthCountry: value })}>
@@ -1037,7 +1037,7 @@ const FamilyTreeEditor: React.FC = () => {
               {/* Family Relationships */}
               <div className="space-y-4">
                 <h4 className="font-medium">Family Relationships</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="father">Father</Label>
                     <Select value={formData.fatherId || undefined} onValueChange={(value) => setFormData({ ...formData, fatherId: value })}>
