@@ -978,33 +978,6 @@ class ApiClient {
   }
 
 
-  async getSubmissions() {
-    return this.request<
-      {
-        id: string;
-        email: string;
-        firstName: string;
-        lastName: string;
-        role: "admin" | "member";
-      }[]
-    >("/admin/submissions", {
-      method: "GET",
-    });
-  }
-
-  async reviewSubmission(
-    id: string,
-    status: "approved" | "rejected",
-    reviewNotes?: string
-  ) {
-    return this.request<{
-      message: string;
-    }>(`/admin/submissions/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ status, reviewNotes }),
-    });
-  }
-
   async getAuditLog(page = 1, limit = 50) {
     return this.request<{
       logs: {
