@@ -93,13 +93,13 @@ export default function Home() {
               memories, and connections that make us who we are today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-yellow-600 text-white font-semibold hover:opacity-90">
+              <Button asChild size="lg" className="bg-yellow-600 text-white font-semibold hover:opacity-90">
                 <Link to="/family-tree" className="flex items-center">
                   Explore Family Tree
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-primary text-foreground hover:bg-primary/10">
+              <Button asChild size="lg" variant="outline" className="border-primary text-foreground hover:bg-primary/10">
                 <Link to="/family-history">
                   View Our History
                 </Link>
