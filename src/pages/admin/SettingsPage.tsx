@@ -92,6 +92,7 @@ const SettingsPage: React.FC = () => {
   });
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [storageLoading, setStorageLoading] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSave = () => {
@@ -129,16 +130,14 @@ const SettingsPage: React.FC = () => {
   // Fetch storage statistics
   const fetchStorageStats = async () => {
     setStorageLoading(true);
+    setStorageError(null);
     try {
       const stats = await apiClient.getEnhancedStorageStats();
       setStorageStats(stats);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to fetch storage stats:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load storage statistics',
-        variant: 'destructive',
-      });
+      setStorageError(message);
     } finally {
       setStorageLoading(false);
     }
@@ -425,7 +424,21 @@ const SettingsPage: React.FC = () => {
                   <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
                   <span className="ml-2 text-gray-500">Loading storage statistics...</span>
                 </div>
-              ) : storageStats ? (
+              ) : storageError ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Failed to load storage statistics: {storageError}
+                  </AlertDescription>
+                </Alert>
+              ) : !storageStats ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No storage data available. Click Refresh to load statistics.
+                  </AlertDescription>
+                </Alert>
+              ) : (
                 <>
                   {/* Storage Warning Alert */}
                   {storageStats.local.isNearCapacity && (
@@ -531,13 +544,6 @@ const SettingsPage: React.FC = () => {
                     </div>
                   </div>
                 </>
-              ) : (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Unable to load storage statistics. Please try refreshing or contact support if the issue persists.
-                  </AlertDescription>
-                </Alert>
               )}
             </CardContent>
           </Card>
