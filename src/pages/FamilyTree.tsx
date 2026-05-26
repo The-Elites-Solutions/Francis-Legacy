@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Search, User, Heart, MapPin, Loader2, Monitor, List, Navigation, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -118,37 +119,41 @@ class FamilyTreeLayout {
     return baseSpacing + increment;
   }
 
-  constructor(members: FamilyMember[]) {
+  constructor(members: FamilyMember[], isMobileViewport?: boolean) {
     this.members = members;
     this.memberMap = new Map(members.map(m => [m.id, m]));
     this.processedMembers = new Set();
-    
-    // Adjust spacing based on viewport width (responsive)
-    if (typeof window !== 'undefined') {
-      const viewportWidth = window.innerWidth;
-      if (viewportWidth < 768) {
-        // Mobile - tighter spacing
-        this.MEMBER_HORIZONTAL_SPACING = 200;
-        this.GENERATION_VERTICAL_SPACING = 200;
-        this.NODE_WIDTH = 120;
-        // Legacy compatibility
-        this.SIBLING_SPACING = 30;
-        this.FAMILY_GROUP_SPACING = 120;
-        this.COUSIN_SPACING = 80;
-        this.GENERATION_SPACING = 120;
-      } else if (viewportWidth < 1024) {
-        // Tablet - medium spacing
-        this.MEMBER_HORIZONTAL_SPACING = 250;
-        this.GENERATION_VERTICAL_SPACING = 220;
-        this.NODE_WIDTH = 140;
-        // Legacy compatibility
-        this.SIBLING_SPACING = 40;
-        this.FAMILY_GROUP_SPACING = 180;
-        this.COUSIN_SPACING = 100;
-        this.GENERATION_SPACING = 150;
-      }
-      // Otherwise use default desktop spacing
+
+    // Adjust spacing based on viewport (responsive)
+    // Prefer the explicit isMobileViewport flag (from useIsMobile hook) when provided,
+    // otherwise fall back to window.innerWidth for SSR safety.
+    const mobile = isMobileViewport !== undefined
+      ? isMobileViewport
+      : (typeof window !== 'undefined' && window.innerWidth < 768);
+    const tablet = !mobile && typeof window !== 'undefined' && window.innerWidth < 1024;
+
+    if (mobile) {
+      // Mobile - tighter spacing
+      this.MEMBER_HORIZONTAL_SPACING = 200;
+      this.GENERATION_VERTICAL_SPACING = 200;
+      this.NODE_WIDTH = 120;
+      // Legacy compatibility
+      this.SIBLING_SPACING = 30;
+      this.FAMILY_GROUP_SPACING = 120;
+      this.COUSIN_SPACING = 80;
+      this.GENERATION_SPACING = 120;
+    } else if (tablet) {
+      // Tablet - medium spacing
+      this.MEMBER_HORIZONTAL_SPACING = 250;
+      this.GENERATION_VERTICAL_SPACING = 220;
+      this.NODE_WIDTH = 140;
+      // Legacy compatibility
+      this.SIBLING_SPACING = 40;
+      this.FAMILY_GROUP_SPACING = 180;
+      this.COUSIN_SPACING = 100;
+      this.GENERATION_SPACING = 150;
     }
+    // Otherwise use default desktop spacing
   }
 
   // NEW: Organize members into generation arrays
@@ -1033,7 +1038,7 @@ function FamilyTreePage() {
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [clickedNode, setClickedNode] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1048,17 +1053,6 @@ function FamilyTreePage() {
   // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState<FamilyTreeMemberNodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
 
   useEffect(() => {
     fetchFamilyMembers();
@@ -1108,7 +1102,7 @@ function FamilyTreePage() {
       return { layoutNodes: [], layoutEdges: [] };
     }
 
-    const layout = new FamilyTreeLayout(familyMembers);
+    const layout = new FamilyTreeLayout(familyMembers, isMobile);
     const { nodes: generatedNodes, edges: generatedEdges } = layout.generateLayout(handleNodeClick, handleViewMember);
     
     // Update nodes with the actual state
@@ -1125,7 +1119,7 @@ function FamilyTreePage() {
       layoutNodes: nodesWithState, 
       layoutEdges: generatedEdges 
     };
-  }, [familyMembers, handleNodeClick, handleViewMember, clickedNode, selectedMonitorMember]);
+  }, [familyMembers, isMobile, handleNodeClick, handleViewMember, clickedNode, selectedMonitorMember]);
 
   // Update React Flow nodes and edges when layout changes
   useEffect(() => {
