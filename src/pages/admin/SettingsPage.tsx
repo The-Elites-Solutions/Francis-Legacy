@@ -90,35 +90,16 @@ const SettingsPage: React.FC = () => {
     backupFrequency: 'daily',
     theme: 'system'
   });
-  const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [storageLoading, setStorageLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSave = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call - in real implementation, you'd save to backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSaved(true);
-      toast({
-        title: 'Success',
-        description: 'Settings saved successfully',
-      });
-      
-      // Reset saved status after 3 seconds
-      setTimeout(() => setSaved(false), 3000);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to save settings',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleSave = () => {
+    toast({
+      title: 'Not implemented',
+      description: 'Settings backend not yet implemented — values shown are defaults, not persisted.',
+      variant: 'destructive',
+    });
   };
 
   const handleInputChange = (field: keyof SiteSettings, value: string | boolean | number) => {
@@ -179,24 +160,21 @@ const SettingsPage: React.FC = () => {
           </h2>
           <p className="text-gray-600">Configure your Francis Legacy website</p>
         </div>
-        <Button 
-          onClick={handleSave} 
-          disabled={loading}
+        <Button
+          onClick={handleSave}
           className="flex items-center gap-2"
         >
           <Save className="h-4 w-4" />
-          {loading ? 'Saving...' : 'Save Changes'}
+          Save Changes
         </Button>
       </div>
 
-      {saved && (
-        <Alert className="border-green-200 bg-green-50">
-          <AlertCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            All changes have been saved successfully.
-          </AlertDescription>
-        </Alert>
-      )}
+      <Alert variant="destructive" className="border-yellow-500 bg-yellow-50 text-yellow-900">
+        <AlertCircle className="h-4 w-4 text-yellow-600" />
+        <AlertDescription>
+          This settings page is <strong>read-only</strong> until backend support is added. Changes made here are not persisted.
+        </AlertDescription>
+      </Alert>
 
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
