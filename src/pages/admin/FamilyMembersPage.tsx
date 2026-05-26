@@ -189,7 +189,7 @@ const FamilyMembersPage: React.FC = () => {
       </Dialog>
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Users className="h-6 w-6" />
