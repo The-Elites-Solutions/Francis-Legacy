@@ -370,19 +370,19 @@ const AdminUsersPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+                      <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" onClick={() => handleEdit(user)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handlePasswordReset(user)}
                         title="Reset Password"
-                        className="hover:bg-blue-50"
+                        className="h-11 w-11 sm:h-9 sm:w-9 hover:bg-blue-50"
                       >
                         <Key className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(user)}>
+                      <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" onClick={() => handleDelete(user)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
