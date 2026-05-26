@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Home, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function NotFound() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen flex items-center justify-center py-8">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -26,11 +27,9 @@ export default function NotFound() {
                 </Link>
               </Button>
               
-              <Button asChild variant="outline" className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400 hover:text-black">
-                <Link to="javascript:history.back()" className="flex items-center">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Go Back
-                </Link>
+              <Button variant="outline" className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400 hover:text-black flex items-center" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go Back
               </Button>
             </div>
           </CardContent>
