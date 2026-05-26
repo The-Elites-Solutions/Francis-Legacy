@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, User, Tag, Search, Filter, Loader2, Newspaper } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -269,8 +270,8 @@ export default function News() {
                         </Avatar>
                         <span className="text-foreground/70 text-sm">{authorName}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-primary p-0 h-auto">
-                        Read more
+                      <Button asChild variant="ghost" size="sm" className="text-yellow-600 hover:text-primary p-0 h-auto">
+                        <Link to={`/news/${article.slug}`}>Read more</Link>
                       </Button>
                     </div>
                   </CardContent>

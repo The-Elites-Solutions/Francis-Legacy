@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import FamilyHistory from './pages/FamilyHistory';
 import FamilyTree from './pages/FamilyTree';
 import News from './pages/News';
+import NewsDetail from './pages/NewsDetail';
 import Blog from './pages/Blog';
 import BlogDetail from './pages/BlogDetail';
 import Archives from './pages/Archives';
@@ -88,6 +89,13 @@ const App = () => {
                 <ProtectedRoute>
                   <Layout>
                     <News />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/news/:slug" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <NewsDetail />
                   </Layout>
                 </ProtectedRoute>
               } />
