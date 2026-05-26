@@ -28,6 +28,7 @@ const UserProfile: React.FC = () => {
     gender: '',
     birthDate: '',
     birthPlace: '',
+    phone: '',
     occupation: '',
     biography: '',
     profilePhotoUrl: ''
@@ -73,6 +74,7 @@ const UserProfile: React.FC = () => {
         gender: memberData.gender || '',
         birthDate: formatDateForInput(memberData.birth_date),
         birthPlace: memberData.birth_place || '',
+        phone: memberData.phone || '',
         occupation: memberData.occupation || '',
         biography: memberData.biography || '',
         profilePhotoUrl: memberData.profile_photo_url || ''
@@ -87,6 +89,7 @@ const UserProfile: React.FC = () => {
         gender: '',
         birthDate: '',
         birthPlace: '',
+        phone: '',
         occupation: '',
         biography: '',
         profilePhotoUrl: ''
@@ -157,6 +160,7 @@ const UserProfile: React.FC = () => {
 
     try {
       console.log('🔍 Profile Debug - Before profile update, user type:', user?.userType);
+      // TODO: add phone to updateOwnProfile API type and server handler (Wave 3)
       const response = await apiClient.updateOwnProfile(profileData);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsEditing(false);
@@ -179,6 +183,7 @@ const UserProfile: React.FC = () => {
           gender: response.member.gender || '',
           birthDate: formatDateForInput(response.member.birth_date),
           birthPlace: response.member.birth_place || '',
+          phone: (response.member as any).phone || '',
           occupation: response.member.occupation || '',
           biography: response.member.biography || '',
           profilePhotoUrl: response.member.profile_photo_url || ''
