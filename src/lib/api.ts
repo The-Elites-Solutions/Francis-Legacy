@@ -932,8 +932,8 @@ class ApiClient {
     return this.request<{
       message: string;
       username: string;
-      newPassword: string;
-      mustChangePassword: boolean;
+      tempPassword: string;
+      emailSent: boolean;
     }>(`/family/${id}/reset-password`, {
       method: "POST",
     });

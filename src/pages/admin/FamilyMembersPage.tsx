@@ -94,7 +94,7 @@ const FamilyMembersPage: React.FC = () => {
       alert(`Password reset successful!
       
 Username: ${response.username}
-New Password: ${response.newPassword}
+New Password: ${response.tempPassword}
 
 The member will be required to change their password on next login.
 Please provide these credentials to ${member.first_name} ${member.last_name}.`);

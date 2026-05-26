@@ -459,7 +459,7 @@ const FamilyTreeEditor: React.FC = () => {
       
       setResetPasswordData({
         username: response.username,
-        tempPassword: response.newPassword
+        tempPassword: response.tempPassword
       });
       setShowPasswordReset(true);
       
