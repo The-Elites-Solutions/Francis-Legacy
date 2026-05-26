@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Calendar, FileText, Image, Video, File, Plus, Music, Archive } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -365,13 +366,13 @@ export default function Archives() {
                           Uploaded by {item.uploaded_by_name || 'Unknown'}
                         </div>
                         <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
                             className="border-primary/30 text-yellow-600 hover:bg-primary/5"
-                            onClick={() => window.open(item.file_url, '_blank')}
                           >
-                            View
+                            <Link to={`/archives/${item.id}`}>View</Link>
                           </Button>
                           <Button 
                             size="sm" 

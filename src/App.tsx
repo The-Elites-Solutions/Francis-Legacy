@@ -18,6 +18,7 @@ import NewsDetail from './pages/NewsDetail';
 import Blog from './pages/Blog';
 import BlogDetail from './pages/BlogDetail';
 import Archives from './pages/Archives';
+import ArchiveDetail from './pages/ArchiveDetail';
 import NotFound from './pages/NotFound';
 
 // Admin imports
@@ -117,6 +118,13 @@ const App = () => {
                 <ProtectedRoute>
                   <Layout>
                     <Archives />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/archives/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ArchiveDetail />
                   </Layout>
                 </ProtectedRoute>
               } />
