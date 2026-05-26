@@ -105,10 +105,10 @@ const AdminLayout: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <span className="hidden sm:inline text-sm text-gray-600">
-                Welcome, {user.firstName} {user.lastName}
+                Welcome, {user.first_name} {user.last_name}
               </span>
               <span className="sm:hidden text-sm text-gray-600">
-                {user.firstName}
+                {user.first_name}
               </span>
               <Button 
                 variant="outline" 
