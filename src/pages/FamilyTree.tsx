@@ -1326,16 +1326,16 @@ function FamilyTreePage() {
             <Button
               onClick={handleCenterTree}
               variant="outline"
-              className="h-11 px-4 border-primary/30 text-foreground hover:bg-yellow-50 hover:border-yellow-600 transition-colors"
+              className="h-11 px-4 w-full sm:w-auto flex-1 sm:flex-none border-primary/30 text-foreground hover:bg-yellow-50 hover:border-yellow-600 transition-colors"
             >
               🎯 Center Tree
             </Button>
             <Button
               onClick={toggleMonitor}
               variant={showMonitor ? "default" : "outline"}
-              className={`h-11 px-4 transition-colors ${
-                showMonitor 
-                  ? "bg-yellow-600 hover:bg-yellow-700 text-white" 
+              className={`h-11 px-4 w-full sm:w-auto flex-1 sm:flex-none transition-colors ${
+                showMonitor
+                  ? "bg-yellow-600 hover:bg-yellow-700 text-white"
                   : "border-primary/30 text-foreground hover:bg-yellow-50 hover:border-yellow-600"
               }`}
             >
