@@ -1414,28 +1414,28 @@ function FamilyTreePage() {
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">{totalMembers}</div>
-              <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Total Members</div>
+              <div className="text-foreground/70 text-sm sm:text-base lg:text-base">Total Members</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">{generations}</div>
-              <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Generations</div>
+              <div className="text-foreground/70 text-sm sm:text-base lg:text-base">Generations</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">3+</div>
-              <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Countries</div>
+              <div className="text-foreground/70 text-sm sm:text-base lg:text-base">Countries</div>
             </CardContent>
           </Card>
           
           <Card className="bg-white shadow-md border-primary/30 text-center touch-manipulation hover:shadow-lg transition-shadow">
             <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 mb-1 sm:mb-2">{earliestYear !== Infinity ? earliestYear : 'N/A'}</div>
-              <div className="text-foreground/70 text-xs sm:text-sm lg:text-base">Earliest Record</div>
+              <div className="text-foreground/70 text-sm sm:text-base lg:text-base">Earliest Record</div>
             </CardContent>
           </Card>
         </div>
