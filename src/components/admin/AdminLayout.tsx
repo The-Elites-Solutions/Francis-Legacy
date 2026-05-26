@@ -32,7 +32,7 @@ const AdminLayout: React.FC = () => {
   const navigationItems = [
     { path: '/admin', icon: Home, label: 'Dashboard', exact: true },
     { path: '/admin/family-members', icon: Users, label: 'Family Members' },
-    { path: '/admin/admin-users', icon: Shield, label: 'Admin Users' },
+    { path: '/admin/admin-users', icon: Shield, label: 'Users' },
     { path: '/admin/family-tree', icon: TreePine, label: 'Family Tree' },
     { path: '/admin/timeline', icon: Clock, label: 'Timeline' },
     { path: '/admin/blog', icon: FileText, label: 'Blog Posts' },
