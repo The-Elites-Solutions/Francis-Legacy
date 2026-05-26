@@ -132,8 +132,8 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
           return;
         }
 
-        // For archive submissions, we'll include file metadata
-        // The actual file upload will be handled separately when approved
+        const uploadResult = await apiClient.uploadFile(formData.file, 'archives');
+
         content = {
           title: formData.title,
           description: formData.description,
@@ -142,9 +142,10 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
           dateTaken: formData.dateTaken,
           location: formData.location,
           personRelated: formData.personRelated,
-          fileName: formData.file.name,
-          fileSize: formData.file.size,
-          fileType: formData.file.type,
+          file_url: uploadResult.file.location,
+          imagekit_file_id: uploadResult.file.fileId,
+          file_type: formData.file.type,
+          file_size: formData.file.size,
         };
       }
 
