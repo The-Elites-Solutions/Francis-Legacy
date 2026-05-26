@@ -273,7 +273,7 @@ export default function Archives() {
               const TypeIcon = getTypeIcon(item.file_type);
               return (
                 <Card key={item.id} className="bg-white shadow-md border-primary/30 hover:border-primary/60 transition-all duration-300 group hover:shadow-lg">
-                  <div className="aspect-square w-full h-[382px] max-w-[382px] max-h-[382px] mx-auto overflow-hidden rounded-t-lg relative">
+                  <div className="aspect-square w-full lg:max-w-[382px] lg:max-h-[382px] mx-auto overflow-hidden rounded-t-lg relative">
                     {item.file_type.includes('image') ? (
                       <img 
                         src={item.file_url} 
