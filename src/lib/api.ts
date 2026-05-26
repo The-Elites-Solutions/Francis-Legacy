@@ -952,6 +952,7 @@ class ApiClient {
     gender?: string;
     birthDate?: string;
     birthPlace?: string;
+    phone?: string;
     occupation?: string;
     biography?: string;
     profilePhotoUrl?: string;
@@ -966,6 +967,7 @@ class ApiClient {
         gender?: string;
         birth_date?: string;
         birth_place?: string;
+        phone?: string;
         occupation?: string;
         biography?: string;
         profile_photo_url?: string;

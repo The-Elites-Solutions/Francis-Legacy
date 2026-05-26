@@ -179,7 +179,7 @@ const UserProfile: React.FC = () => {
           gender: response.member.gender || '',
           birthDate: formatDateForInput(response.member.birth_date),
           birthPlace: response.member.birth_place || '',
-          phone: (response.member as any).phone || '',
+          phone: response.member.phone || '',
           occupation: response.member.occupation || '',
           biography: response.member.biography || '',
           profilePhotoUrl: response.member.profile_photo_url || ''
