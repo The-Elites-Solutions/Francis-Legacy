@@ -246,6 +246,10 @@ const FamilyTreeEditor: React.FC = () => {
     });
   };
 
+  // TODO (L-S5): this handler can issue up to 11 sequential PUT calls per drag
+  // (spouse link + child links with both parents). Replace with a single
+  // PATCH /api/family/relationships batch endpoint once the server side is ready.
+  // Deferred: see L-S5 in AUDIT-REPORT.md.
   // Core relationship handling function
   const handleSetRelationship = async (
     sourceNodeId: string,
