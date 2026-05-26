@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import ReactCrop, { 
   type Crop, 
   type PixelCrop, 
@@ -25,6 +26,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   onPhotoUpdate,
   isAdminMode = false,
 }) => {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [imgSrc, setImgSrc] = useState('');
   const [crop, setCrop] = useState<Crop>();
@@ -49,13 +51,13 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        toast({ title: 'Error', description: 'Please select an image file', variant: 'destructive' });
         return;
       }
 
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image must be smaller than 5MB');
+        toast({ title: 'Error', description: 'Image must be smaller than 5MB', variant: 'destructive' });
         return;
       }
 
@@ -142,7 +144,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   // Convert canvas to blob and upload
   const handleUpload = async () => {
     if (!previewCanvasRef.current || !completedCrop) {
-      alert('Please select and crop an image first');
+      toast({ title: 'Error', description: 'Please select and crop an image first', variant: 'destructive' });
       return;
     }
 
@@ -181,7 +183,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       }, 'image/jpeg', 0.9);
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Failed to upload profile picture. Please try again.');
+      toast({ title: 'Error', description: 'Failed to upload profile picture. Please try again.', variant: 'destructive' });
     } finally {
       setUploading(false);
     }
