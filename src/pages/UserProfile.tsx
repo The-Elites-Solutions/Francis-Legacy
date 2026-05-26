@@ -159,15 +159,11 @@ const UserProfile: React.FC = () => {
     setMessage(null);
 
     try {
-      console.log('🔍 Profile Debug - Before profile update, user type:', user?.userType);
       // TODO: add phone to updateOwnProfile API type and server handler (Wave 3)
       const response = await apiClient.updateOwnProfile(profileData);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsEditing(false);
       
-      // Instead of calling checkAuth() which might cause session confusion,
-      // let's just refresh the profile data locally from the API response
-      console.log('🔍 Profile Debug - Profile updated successfully, refreshing local data only');
       if (response && response.member) {
         // Update profileData state with the returned member data
         const formatDateForInput = (dateString: string) => {
@@ -188,12 +184,7 @@ const UserProfile: React.FC = () => {
           biography: response.member.biography || '',
           profilePhotoUrl: response.member.profile_photo_url || ''
         });
-        console.log('🔍 Profile Debug - Profile data refreshed locally without session re-auth');
       }
-      
-      // TODO: Consider whether we really need to refresh user auth context here
-      // For now, let's skip the checkAuth() call to prevent session switching
-      // await checkAuth(); 
     } catch (err) {
       setMessage({ 
         type: 'error', 
