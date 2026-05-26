@@ -41,14 +41,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const checkAuth = async () => {
     setLoading(true);
     try {
-      console.log('🔍 Auth Debug - checkAuth called, current user type:', user?.userType);
       // Check session-based authentication
       const response = await apiClient.getCurrentUser();
-      console.log('🔍 Auth Debug - getCurrentUser response:', response.user.userType, 'user', response.user.id, `(${response.user.first_name} ${response.user.last_name})`);
       setUser(response.user);
-      console.log('🔍 Auth Debug - User context updated to:', response.user.userType);
     } catch (error) {
-      console.log('🔍 Auth Debug - checkAuth failed, clearing user');
       // Session expired or no session
       setUser(null);
       // Clear any old localStorage data
