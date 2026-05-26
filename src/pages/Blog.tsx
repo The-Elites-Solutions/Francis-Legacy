@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, User, Clock, Tag, Search, BookOpen, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -242,8 +243,8 @@ export default function Blog() {
                                 <div className="text-foreground font-medium">{authorName}</div>
                               </div>
                             </div>
-                            <Button className="gold-texture text-white hover:opacity-90">
-                              Read Story
+                            <Button asChild className="gold-texture text-white hover:opacity-90">
+                              <Link to={`/blog/${post.slug}`}>Read Story</Link>
                             </Button>
                           </div>
                         </div>
@@ -316,8 +317,8 @@ export default function Blog() {
                         </Avatar>
                         <span className="text-foreground/70 text-sm">{authorName}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-primary p-0 h-auto">
-                        Read more
+                      <Button asChild variant="ghost" size="sm" className="text-yellow-600 hover:text-primary p-0 h-auto">
+                        <Link to={`/blog/${post.slug}`}>Read more</Link>
                       </Button>
                     </div>
                   </CardContent>

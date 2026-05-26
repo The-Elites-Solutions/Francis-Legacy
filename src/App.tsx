@@ -15,6 +15,7 @@ import FamilyHistory from './pages/FamilyHistory';
 import FamilyTree from './pages/FamilyTree';
 import News from './pages/News';
 import Blog from './pages/Blog';
+import BlogDetail from './pages/BlogDetail';
 import Archives from './pages/Archives';
 import NotFound from './pages/NotFound';
 
@@ -94,6 +95,13 @@ const App = () => {
                 <ProtectedRoute>
                   <Layout>
                     <Blog />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/blog/:slug" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <BlogDetail />
                   </Layout>
                 </ProtectedRoute>
               } />
