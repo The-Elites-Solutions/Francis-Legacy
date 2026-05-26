@@ -289,108 +289,183 @@ const AdminUsersPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Admin User</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.profile_image_url} />
-                        <AvatarFallback>
-                          {user.first_name.charAt(0)}{user.last_name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{getUserName(user)}</div>
-                        {user.birth_date && (
-                          <div className="text-sm text-gray-500 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(user.birth_date).toLocaleDateString()}
-                          </div>
-                        )}
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-3">
+            {filteredUsers.map((user) => (
+              <Card key={user.id} className="border shadow-sm">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.profile_image_url} />
+                      <AvatarFallback>
+                        {user.first_name.charAt(0)}{user.last_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{getUserName(user)}</div>
+                      <div className="flex items-center gap-1 text-sm text-gray-500 truncate">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{user.email}</span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-sm">
-                        <Mail className="h-3 w-3" />
-                        {user.email}
-                      </div>
-                      {user.phone && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <Phone className="h-3 w-3" />
-                          {user.phone}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
                     <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                       <Shield className="h-3 w-3 mr-1" />
                       {user.role}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant="default"
-                        className="bg-green-100 text-green-800"
-                      >
-                        <UserCheck className="h-3 w-3 mr-1" />
-                        Active
-                      </Badge>
-                      {user.email_verified && (
-                        <Badge variant="outline" className="text-xs">
-                          Verified
-                        </Badge>
-                      )}
+                    <Badge variant="default" className="bg-green-100 text-green-800">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      {user.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                    {user.email_verified && (
+                      <Badge variant="outline" className="text-xs">Verified</Badge>
+                    )}
+                  </div>
+
+                  {user.phone && (
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <Phone className="h-3 w-3" />
+                      {user.phone}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {new Date(user.created_at).toLocaleDateString()}
-                      {user.created_by_name && (
-                        <div className="text-xs text-gray-500">
-                          by {user.created_by_name}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" onClick={() => handleEdit(user)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handlePasswordReset(user)}
-                        title="Reset Password"
-                        className="h-11 w-11 sm:h-9 sm:w-9 hover:bg-blue-50"
-                      >
-                        <Key className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" onClick={() => handleDelete(user)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  )}
+
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <Calendar className="h-3 w-3" />
+                    Joined {new Date(user.created_at).toLocaleDateString()}
+                    {user.created_by_name && (
+                      <span className="ml-1">by {user.created_by_name}</span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-1 pt-1">
+                    <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => handleEdit(user)} title="Edit">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handlePasswordReset(user)}
+                      title="Reset Password"
+                      className="h-11 w-11 hover:bg-blue-50"
+                    >
+                      <Key className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => handleDelete(user)} title="Delete">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Admin User</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.profile_image_url} />
+                          <AvatarFallback>
+                            {user.first_name.charAt(0)}{user.last_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{getUserName(user)}</div>
+                          {user.birth_date && (
+                            <div className="text-sm text-gray-500 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(user.birth_date).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-sm">
+                          <Mail className="h-3 w-3" />
+                          {user.email}
+                        </div>
+                        {user.phone && (
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <Phone className="h-3 w-3" />
+                            {user.phone}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                        <Shield className="h-3 w-3 mr-1" />
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="default"
+                          className="bg-green-100 text-green-800"
+                        >
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                        {user.email_verified && (
+                          <Badge variant="outline" className="text-xs">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {new Date(user.created_at).toLocaleDateString()}
+                        {user.created_by_name && (
+                          <div className="text-xs text-gray-500">
+                            by {user.created_by_name}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" onClick={() => handleEdit(user)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handlePasswordReset(user)}
+                          title="Reset Password"
+                          className="h-11 w-11 sm:h-9 sm:w-9 hover:bg-blue-50"
+                        >
+                          <Key className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" onClick={() => handleDelete(user)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
