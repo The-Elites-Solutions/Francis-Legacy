@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Search, Filter, Clock, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Search, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ interface TimelineEvent {
   title: string;
   description: string;
   event_date: string;
+  event_type?: string;
   location?: string;
   image_url?: string;
   family_member_ids?: string[];
@@ -21,8 +22,25 @@ interface TimelineEvent {
 }
 
 const getEventYear = (event: TimelineEvent) => new Date(event.event_date).getFullYear().toString();
-const getEventCategory = (event: TimelineEvent) => {
-  // Simple category extraction based on content
+
+/**
+ * Derive a display category from the event_type column (server-side value).
+ * Falls back to heuristic content-matching when event_type is absent or unrecognised,
+ * so existing events without a populated event_type still display sensibly.
+ *
+ * NOTE (H-S7): The server endpoint /api/timeline/type/:type filters by exact match on
+ * the event_type column. The frontend sends Title-Case values (e.g. "Military").
+ * If the DB stores them differently (e.g. "military" or "MILITARY"), results will be
+ * empty. Aligning the casing requires a data-migration which is out of scope here.
+ */
+const getEventCategory = (event: TimelineEvent): string => {
+  if (event.event_type) {
+    // Normalise to Title Case for display consistency
+    const normalised = event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1).toLowerCase();
+    const known = ['General', 'Migration', 'Business', 'Military', 'Property', 'Tradition'];
+    if (known.includes(normalised)) return normalised;
+  }
+  // Heuristic fallback for events with no/unrecognised event_type
   const content = `${event.title} ${event.description}`.toLowerCase();
   if (content.includes('war') || content.includes('military')) return 'Military';
   if (content.includes('business') || content.includes('work')) return 'Business';
@@ -48,17 +66,28 @@ export default function FamilyHistory() {
   const [statsLoading, setStatsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Re-fetch from server whenever the category filter changes (server-side filtering)
   useEffect(() => {
-    fetchTimelineEvents();
+    fetchTimelineEvents(selectedCategory);
+  }, [selectedCategory]);
+
+  useEffect(() => {
     fetchFamilyHistoryStats();
   }, []);
 
-  const fetchTimelineEvents = async () => {
+  const fetchTimelineEvents = async (category: string) => {
     try {
       setLoading(true);
-      const events = await apiClient.getTimelineEvents();
-      setTimelineEvents(events || []);
       setError(null);
+      let events: TimelineEvent[];
+      if (category === 'All') {
+        events = (await apiClient.getTimelineEvents() as unknown as TimelineEvent[]) || [];
+      } else {
+        // Send the category value as stored — see H-S7 note in getEventCategory above
+        // regarding potential casing mismatch with the DB event_type column.
+        events = (await apiClient.getTimelineEventsByType(category) as unknown as TimelineEvent[]) || [];
+      }
+      setTimelineEvents(events);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load timeline events';
       setError(errorMessage);
@@ -85,13 +114,15 @@ export default function FamilyHistory() {
     }
   };
 
+  // Client-side search filter applied on top of already server-filtered results
   const filteredEvents = timelineEvents.filter(event => {
-    const eventCategory = getEventCategory(event);
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (event.location && event.location.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === 'All' || eventCategory === selectedCategory;
-    return matchesSearch && matchesCategory;
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      event.title.toLowerCase().includes(q) ||
+      event.description.toLowerCase().includes(q) ||
+      (event.location && event.location.toLowerCase().includes(q))
+    );
   });
 
   return (
