@@ -224,7 +224,7 @@ const AdminDashboard: React.FC = () => {
       description: 'Registered family members',
       icon: Users,
       color: 'bg-blue-500',
-      path: '/admin/users',
+      path: '/admin/family-members',
     },
     {
       title: 'Family Tree',
@@ -372,10 +372,10 @@ const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start h-auto p-3"
-                onClick={() => navigate('/admin/users')}
+                onClick={() => navigate('/admin/family-members')}
               >
                 <div className="text-left">
                   <div className="font-medium text-sm">Add Family Member</div>
