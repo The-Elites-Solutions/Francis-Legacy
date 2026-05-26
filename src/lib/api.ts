@@ -10,11 +10,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 class ApiClient {
   private baseURL: string;
-  private token: string | null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
-    this.token = localStorage.getItem("francis_legacy_token");
   }
 
   private async request<T>(
@@ -96,8 +94,6 @@ class ApiClient {
       method: "POST",
     });
 
-    this.token = null;
-    localStorage.removeItem("francis_legacy_token");
     localStorage.removeItem("francis_legacy_user");
 
     return response;
