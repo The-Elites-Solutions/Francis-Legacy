@@ -6,13 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Edit2, Save, X } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Edit2, Save, X, FileText } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import ProfilePictureUpload from '@/components/ProfilePictureUpload';
+import { useToast } from '@/hooks/use-toast';
 
 const UserProfile: React.FC = () => {
   const { user, checkAuth } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -42,6 +45,11 @@ const UserProfile: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // My Submissions state (family members only)
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
   // Redirect if not logged in
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -50,8 +58,8 @@ const UserProfile: React.FC = () => {
   // Initialize profile data when user loads
   useEffect(() => {
     if (user && user.userType === 'family_member') {
-      // Fetch current member data to populate the form
       fetchMemberData();
+      fetchSubmissions();
     }
   }, [user]);
 
@@ -94,6 +102,39 @@ const UserProfile: React.FC = () => {
         biography: '',
         profilePhotoUrl: ''
       });
+    }
+  };
+
+  const fetchSubmissions = async () => {
+    setSubmissionsLoading(true);
+    try {
+      const data = await apiClient.getMySubmissions();
+      setSubmissions(data);
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to load submissions',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
+  const handleCancelSubmission = async (id: string) => {
+    setCancellingId(id);
+    try {
+      await apiClient.deleteSubmission(id);
+      toast({ title: 'Submission cancelled successfully' });
+      await fetchSubmissions();
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to cancel submission',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -598,6 +639,78 @@ const UserProfile: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* My Submissions - family members only */}
+        {user.userType === 'family_member' && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="w-5 h-5" />
+                <span>My Submissions</span>
+              </CardTitle>
+              <CardDescription>
+                Content you have submitted for review
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {submissionsLoading ? (
+                <p className="text-sm text-gray-500 py-4 text-center">Loading submissions...</p>
+              ) : submissions.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center">You haven't submitted anything yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {submissions.map((sub) => {
+                    const statusColor =
+                      sub.status === 'approved'
+                        ? 'bg-green-100 text-green-800 border-green-200'
+                        : sub.status === 'rejected'
+                        ? 'bg-red-100 text-red-800 border-red-200'
+                        : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+
+                    return (
+                      <div
+                        key={sub.id}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg bg-white"
+                      >
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className="capitalize text-xs">
+                              {sub.type}
+                            </Badge>
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusColor}`}
+                            >
+                              {sub.status}
+                            </span>
+                          </div>
+                          <p className="font-medium text-gray-900 truncate">{sub.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(sub.created_at).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        {sub.status === 'pending' && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={cancellingId === sub.id}
+                            onClick={() => handleCancelSubmission(sub.id)}
+                            className="shrink-0"
+                          >
+                            {cancellingId === sub.id ? 'Cancelling...' : 'Cancel'}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Account Status */}
         <Card className="mt-8">
