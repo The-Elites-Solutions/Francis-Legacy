@@ -274,7 +274,7 @@ const FamilyMembersPage: React.FC = () => {
                   <div className="flex flex-wrap gap-2 items-center">
                     <Badge variant="secondary">{member.role}</Badge>
                     {getStatusBadge(member)}
-                    <span className="text-xs text-gray-400">
+                    <span className="text-sm text-gray-400">
                       Joined {new Date(member.created_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -373,7 +373,7 @@ const FamilyMembersPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {getStatusBadge(member)}
                         {member.last_login && (
-                          <div className="text-xs text-gray-400">
+                          <div className="text-sm text-gray-400">
                             Last: {new Date(member.last_login).toLocaleDateString()}
                           </div>
                         )}

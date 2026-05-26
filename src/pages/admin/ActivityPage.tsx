@@ -387,7 +387,7 @@ const ActivityPage: React.FC = () => {
                               </Badge>
                             )}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-gray-500">
                             {formatRelativeTime(log.created_at)}
                           </div>
                         </div>
@@ -396,7 +396,7 @@ const ActivityPage: React.FC = () => {
                           {formatAction(log.action, log.target_type, adminName)}
                         </p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-gray-600">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
                           <div>
                             <span className="font-medium">Time:</span> {formatTimestamp(log.created_at)}
                           </div>

@@ -1530,7 +1530,7 @@ function FamilyTreePage() {
                             )}
                           </div>
                           
-                          <div className="flex items-center space-x-3 text-xs text-foreground/60 mt-1">
+                          <div className="flex items-center space-x-3 text-sm text-foreground/60 mt-1">
                             {birthYear && (
                               <span>Born: {birthYear}</span>
                             )}
