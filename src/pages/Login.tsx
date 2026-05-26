@@ -45,7 +45,6 @@ const Login: React.FC = () => {
 
   const clearAuthData = () => {
     localStorage.removeItem('francis_legacy_user');
-    localStorage.removeItem('francis_legacy_token');
     // Clear any session cookies
     document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     window.location.reload();

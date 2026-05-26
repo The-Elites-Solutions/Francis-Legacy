@@ -49,7 +49,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setUser(null);
       // Clear any old localStorage data
       localStorage.removeItem("francis_legacy_user");
-      localStorage.removeItem("francis_legacy_token");
     } finally {
       setLoading(false);
     }
@@ -70,7 +69,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setUser(null);
       // Clear any old localStorage data
       localStorage.removeItem("francis_legacy_user");
-      localStorage.removeItem("francis_legacy_token");
     }
   };
 
