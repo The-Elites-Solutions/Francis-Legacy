@@ -214,7 +214,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         </div>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Update Profile Picture</DialogTitle>
           <DialogDescription>
@@ -246,7 +246,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           {/* Image Cropping Area */}
           {imgSrc && (
             <div className="space-y-4">
-              <div className="max-h-96 overflow-auto">
+              <div className="max-h-[50vh] overflow-auto">
                 <ReactCrop
                   crop={crop}
                   onChange={(pixelCrop, percentCrop) => setCrop(percentCrop)}
