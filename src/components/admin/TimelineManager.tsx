@@ -289,12 +289,12 @@ const TimelineManager: React.FC = () => {
 
       {/* Event Type Filter */}
       <Tabs value={selectedType} onValueChange={setSelectedType}>
-        <TabsList className="grid grid-cols-4 lg:grid-cols-9 w-full">
-          <TabsTrigger value="all">All ({events.length})</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto gap-1 lg:grid lg:grid-cols-9 lg:gap-0">
+          <TabsTrigger value="all" className="flex-shrink-0">All ({events.length})</TabsTrigger>
           {eventTypes.map((type) => {
             const count = events.filter(e => e.event_type === type.value).length;
             return (
-              <TabsTrigger key={type.value} value={type.value} className="flex items-center gap-1">
+              <TabsTrigger key={type.value} value={type.value} className="flex-shrink-0 flex items-center gap-1">
                 <type.icon className="h-3 w-3" />
                 <span className="hidden sm:inline">{type.label}</span>
                 ({count})
